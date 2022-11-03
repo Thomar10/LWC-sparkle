@@ -2,7 +2,7 @@ The sparkle in the resource file comes from the zip file, with the following mod
 main have been added as entry point
 and the following code have been added as written below. This means
 the program accepts a list of integer arguments, and the second last is branch, and last argument is
-step.
+step. As for now the java program expects max 16 arguments (as the C code implies)
 
 ```
 int main(int argc, char *argv[]) {

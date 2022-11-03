@@ -39,7 +39,7 @@ public final class Sparkle {
           -1028445891
       };
 
-  private static final int maxBranches = 8;
+  public static final int maxBranches = 8;
 
   static int rot(int x, int n) {
     return (x >>> n) | (x << (32 - n));
@@ -56,10 +56,10 @@ public final class Sparkle {
       state[3] ^= i;
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
-        state = alzetteRound(state, j, 31, 24, rc);
-        state = alzetteRound(state, j, 17, 17, rc);
-        state = alzetteRound(state, j, 0, 31, rc);
-        state = alzetteRound(state, j, 24, 16, rc);
+        alzetteRound(state, j, 31, 24, rc);
+        alzetteRound(state, j, 17, 17, rc);
+        alzetteRound(state, j, 0, 31, rc);
+        alzetteRound(state, j, 24, 16, rc);
       }
       tmpx = x0 = state[0];
       tmpy = y0 = state[1];
@@ -126,11 +126,10 @@ public final class Sparkle {
     state[j] -= rot(state[j + 1], shiftTwo);
   }
 
-  static int[] alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
+  static void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
     // Let state[j] be x and state[j+1] be y
     state[j] += rot(state[j + 1], shiftOne);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
-    return state;
   }
 }
