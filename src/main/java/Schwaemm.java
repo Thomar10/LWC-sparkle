@@ -122,10 +122,9 @@ public final class Schwaemm {
    * @param state state
    * @param data data to be absorbed
    */
-  private static void associateData(int[] state, byte[] data) {
+  static void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
-    // TODO make sure this does not die / work on % 4 =/ 0 cases.
-    int[] dataAsInt = createIntArrayFromBytes(data, data.length);
+    int[] dataAsInt = createIntArrayFromBytes(data, data.length / 4);
     int index = 0;
     while (dataSize > RATE_BYTES) {
       rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
@@ -157,13 +156,14 @@ public final class Schwaemm {
 
   private static void rhoWhiAutLast(int[] state, int[] data, int length) {
     int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, length);
+    int srcStartPos = (length - 1) / 4;
+    System.arraycopy(data, srcStartPos, buffer, 0, data.length - srcStartPos);
     if (length < RATE_WORDS) {
       // Fatter ikke hvad der sker ved *bufptr = 0x80 pt.
       // Ser dog ud til dette virker, må tjekke senere.
       buffer[0] = 32768;
+      System.out.println("HEJ");
     }
-
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[i];
       state[i] = state[j] ^ buffer[i] ^ state[RATE_WORDS + i];
@@ -171,10 +171,9 @@ public final class Schwaemm {
     }
   }
 
-  private static void initialize(int[] state, byte[] key, byte[] nonce) {
+  static void initialize(int[] state, byte[] key, byte[] nonce) {
     int[] intNonce = createIntArrayFromBytes(nonce, NONCE_BYTES / 4);
     System.arraycopy(intNonce, 0, state, 0, intNonce.length);
-
     int[] intKey = createIntArrayFromBytes(key, KEY_BYTES / 4);
     System.arraycopy(intKey, 0, state, RATE_WORDS, intKey.length);
     Sparkle.sparkle256(state);
@@ -218,12 +217,12 @@ public final class Schwaemm {
       return bytesToInt(bytes, offset);
     }
     if ((bytes.length - offset) % 3 == 0) {
-      return Byte.toUnsignedInt(bytes[offset]) << 24
+      return Byte.toUnsignedInt(bytes[2 + offset]) << 24
           | Byte.toUnsignedInt(bytes[1 + offset]) << 16
-          | Byte.toUnsignedInt(bytes[2 + offset]) << 8;
+          | Byte.toUnsignedInt(bytes[offset]) << 8;
     }
     if ((bytes.length - offset) % 2 == 0) {
-      return Byte.toUnsignedInt(bytes[offset]) << 24 | Byte.toUnsignedInt(bytes[1 + offset]) << 16;
+      return Byte.toUnsignedInt(bytes[1 + offset]) << 24 | Byte.toUnsignedInt(bytes[offset]) << 16;
     }
 
     return Byte.toUnsignedInt(bytes[offset]) << 24;
@@ -237,10 +236,10 @@ public final class Schwaemm {
   }
 
   private static int bytesToInt(byte[] bytes, int offset) {
-    return Byte.toUnsignedInt(bytes[offset]) << 24
-        | Byte.toUnsignedInt(bytes[1 + offset]) << 16
-        | Byte.toUnsignedInt(bytes[2 + offset]) << 8
-        | Byte.toUnsignedInt(bytes[3 + offset]);
+    return Byte.toUnsignedInt(bytes[3 + offset]) << 24
+        | Byte.toUnsignedInt(bytes[2 + offset]) << 16
+        | Byte.toUnsignedInt(bytes[1 + offset]) << 8
+        | Byte.toUnsignedInt(bytes[offset]);
   }
 
   public static void main(String[] args) {
