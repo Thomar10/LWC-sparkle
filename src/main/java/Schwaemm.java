@@ -124,7 +124,7 @@ public final class Schwaemm {
    */
   static void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
-    int[] dataAsInt = createIntArrayFromBytes(data, data.length / 4);
+    int[] dataAsInt = createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
     int index = 0;
     while (dataSize > RATE_BYTES) {
       rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
@@ -159,11 +159,9 @@ public final class Schwaemm {
     int srcStartPos = (length - 1) / 4;
     System.arraycopy(data, srcStartPos, buffer, 0, data.length - srcStartPos);
     if (length < RATE_WORDS) {
-      // Fatter ikke hvad der sker ved *bufptr = 0x80 pt.
-      // Ser dog ud til dette virker, må tjekke senere.
-      buffer[0] = 32768;
-      System.out.println("HEJ");
+      buffer[0] |= 128 << (8 * length);
     }
+
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[i];
       state[i] = state[j] ^ buffer[i] ^ state[RATE_WORDS + i];
@@ -214,18 +212,21 @@ public final class Schwaemm {
 
   private static int bytesToIntSafe(byte[] bytes, int offset) {
     if ((bytes.length - offset) % 4 == 0) {
-      return bytesToInt(bytes, offset);
+      return Byte.toUnsignedInt(bytes[3 + offset]) << 24
+          | Byte.toUnsignedInt(bytes[2 + offset]) << 16
+          | Byte.toUnsignedInt(bytes[1 + offset]) << 8
+          | Byte.toUnsignedInt(bytes[offset]);
     }
     if ((bytes.length - offset) % 3 == 0) {
-      return Byte.toUnsignedInt(bytes[2 + offset]) << 24
-          | Byte.toUnsignedInt(bytes[1 + offset]) << 16
-          | Byte.toUnsignedInt(bytes[offset]) << 8;
+      return (Byte.toUnsignedInt(bytes[2 + offset]) << 16)
+          | (Byte.toUnsignedInt(bytes[1 + offset]) << 8)
+          | (Byte.toUnsignedInt(bytes[offset]));
     }
     if ((bytes.length - offset) % 2 == 0) {
-      return Byte.toUnsignedInt(bytes[1 + offset]) << 24 | Byte.toUnsignedInt(bytes[offset]) << 16;
+      return Byte.toUnsignedInt(bytes[1 + offset]) << 8 | Byte.toUnsignedInt(bytes[offset]);
     }
 
-    return Byte.toUnsignedInt(bytes[offset]) << 24;
+    return Byte.toUnsignedInt(bytes[offset]);
   }
 
   public static void intToBytes(int value, byte[] writeBuffer, int offset) {
@@ -233,22 +234,5 @@ public final class Schwaemm {
     writeBuffer[1 + offset] = (byte) (value >>> 16);
     writeBuffer[2 + offset] = (byte) (value >>> 8);
     writeBuffer[3 + offset] = (byte) value;
-  }
-
-  private static int bytesToInt(byte[] bytes, int offset) {
-    return Byte.toUnsignedInt(bytes[3 + offset]) << 24
-        | Byte.toUnsignedInt(bytes[2 + offset]) << 16
-        | Byte.toUnsignedInt(bytes[1 + offset]) << 8
-        | Byte.toUnsignedInt(bytes[offset]);
-  }
-
-  public static void main(String[] args) {
-    byte[] result =
-        encryptAndTag(
-            new byte[] {50},
-            new byte[] {0},
-            new byte[] {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},
-            new byte[] {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20});
-    System.out.println(Arrays.toString(result));
   }
 }

@@ -64,18 +64,15 @@ public final class SchwaemmTest {
 
   @RepeatedTest(50)
   void processAssociateData() throws IOException, InterruptedException {
-    int randomInt = random.nextInt(32 - 1) + 1;
+    int randomInt = random.nextInt(3 - 1) + 1;
     byte[] associate = new byte[randomInt];
     random.nextBytes(associate);
-    System.out.println(Arrays.toString(associate));
 
     byte[] nonce = new byte[16];
     random.nextBytes(nonce);
-    System.out.println(Arrays.toString(nonce));
 
     byte[] key = new byte[16];
     random.nextBytes(key);
-    System.out.println(Arrays.toString(key));
 
     int[] state = new int[8];
     Files.write(Path.of(resourceSchwaemm + "/key"), key);
@@ -96,20 +93,45 @@ public final class SchwaemmTest {
           75, 9, 44, 96, 54, -41, -82, -22, 45, -58, 2, 88, 4, 94, -121, 32, 114, -40, 35, -64, 114,
           18, 111, 72, -50, 76, 43, -108, -63, 7, -90, -38
         };
-    // random.nextBytes(associate);
 
     byte[] nonce = new byte[] {-16, 63, 29, 26, 85, -50, 1, 30, 69, -57, 69, 26, 13, 55, -57, -6};
-    // random.nextBytes(nonce);
 
     byte[] key =
         new byte[] {-46, -29, -126, -115, 64, -39, -56, 122, 74, -109, -47, 94, 103, -32, 51, 12};
-    // random.nextBytes(key);
 
     int[] state = new int[8];
     Files.write(Path.of(resourceSchwaemm + "/key"), key);
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
-    int[] cState = callProcess(new String[] {schwaemmCpath, "associate"});
+    int[] cState = callProcess(new String[] {schwaemmCpath, "associate", "32"});
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Assertions.assertThat(cState).isEqualTo(state);
+
+    associate = new byte[] {73, 102, -74};
+    nonce = new byte[] {85, -5, -5, 78, 120, -61, 89, 19, -15, -3, 116, 19, -79, 5, -98, -27};
+    key = new byte[] {64, 67, -110, -123, 88, -65, 122, -59, 113, -87, 50, -59, -29, 1, -85, -77};
+
+    state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    cState = callProcess(new String[] {schwaemmCpath, "associate", "3"});
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Assertions.assertThat(cState).isEqualTo(state);
+
+    associate = new byte[] {24};
+    nonce = new byte[] {-69, 114, 20, -36, 8, 34, -60, -49, -7, 71, -66, 73, -66, 81, -115, -96};
+    key = new byte[] {-73, 19, 91, -7, 104, 124, -18, -94, 81, -34, 98, 11, -51, -110, -65, -18};
+
+    state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    cState = callProcess(new String[] {schwaemmCpath, "associate", "1"});
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
