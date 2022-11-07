@@ -63,10 +63,13 @@ public final class SchwaemmTest {
   }
 
   @RepeatedTest(50)
-  void processAssociateData() throws IOException, InterruptedException {
-    int randomInt = random.nextInt(3 - 1) + 1;
+  void processPlaintext() throws IOException, InterruptedException {
+    int randomInt = random.nextInt(32 - 1) + 1;
+    int randomMsg = random.nextInt(32 - 1) + 1;
     byte[] associate = new byte[randomInt];
+    byte[] message = new byte[randomMsg];
     random.nextBytes(associate);
+    random.nextBytes(message);
 
     byte[] nonce = new byte[16];
     random.nextBytes(nonce);
@@ -78,8 +81,58 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/key"), key);
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    int[] cState =
+        callProcess(
+            new String[] {
+              schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomInt)
+            });
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Assertions.assertThat(cState).isEqualTo(state);
+  }
+
+  @RepeatedTest(50)
+  void processAssociateData() throws IOException, InterruptedException {
+    int randomInt = random.nextInt(32 - 1) + 1;
+    byte[] associate = new byte[randomInt];
+    random.nextBytes(associate);
+    System.out.println(randomInt);
+    System.out.println(Arrays.toString(associate));
+
+    byte[] nonce = new byte[16];
+    // random.nextBytes(nonce);
+    // System.out.println(Arrays.toString(nonce));
+
+    byte[] key = new byte[16];
+    // random.nextBytes(key);
+    // System.out.println(Arrays.toString(key));
+
+    int[] state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     int[] cState =
         callProcess(new String[] {schwaemmCpath, "associate", String.valueOf(randomInt)});
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Assertions.assertThat(cState).isEqualTo(state);
+  }
+
+  @Test
+  void hej() throws IOException, InterruptedException {
+    byte[] associate =
+        new byte[] {26, -4, 0, 72, -112, 55, -80, 69, -28, -58, -17, -68, 118, -103, 18, -72};
+    byte[] nonce = new byte[16];
+    byte[] key = new byte[16];
+
+    int[] state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    int[] cState = callProcess(new String[] {schwaemmCpath, "associate", "16"});
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
@@ -132,6 +185,24 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     cState = callProcess(new String[] {schwaemmCpath, "associate", "1"});
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Assertions.assertThat(cState).isEqualTo(state);
+
+    associate =
+        new byte[] {
+          101, -15, 127, 102, 29, 28, -65, -103, 101, 26, -107, 95, -38, 34, 13, -99, -93, 44, 1,
+          -57, -43, 58, -70, -46, 121, -9, -123, 102
+        };
+    nonce = new byte[] {100, 17, -25, -61, 43, 45, 23, 62, 93, -116, 32, -39, 28, 82, 79, -126};
+    key = new byte[] {-61, 68, 25, 124, 53, -61, -87, -56, -3, -128, 3, 36, 2, 83, 91, -92};
+
+    state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    cState = callProcess(new String[] {schwaemmCpath, "associate", "28"});
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);

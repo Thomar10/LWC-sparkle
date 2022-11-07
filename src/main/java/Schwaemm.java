@@ -125,17 +125,19 @@ public final class Schwaemm {
   static void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
     int[] dataAsInt = createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
+    int dataAsIntSize = dataAsInt.length;
     int index = 0;
     while (dataSize > RATE_BYTES) {
       rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
       Sparkle.sparkle256Slim(state);
       dataSize -= RATE_BYTES;
+      dataAsIntSize--;
       index++;
     }
 
     // LAST BLOCK
     state[STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
-    rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length), dataSize);
+    rhoWhiAutLast(state, dataAsInt, index, dataAsIntSize, dataSize);
     Sparkle.sparkle256(state);
   }
 
@@ -154,19 +156,41 @@ public final class Schwaemm {
     return i;
   }
 
-  private static void rhoWhiAutLast(int[] state, int[] data, int length) {
+  private static void rhoWhiAutLast(
+      int[] state, int[] data, int length, int dataAsIntSize, int dataSize) {
     int[] buffer = new int[RATE_WORDS];
-    int srcStartPos = (length - 1) / 4;
-    System.arraycopy(data, srcStartPos, buffer, 0, data.length - srcStartPos);
-    if (length < RATE_WORDS) {
-      buffer[0] |= 128 << (8 * length);
+    System.out.println();
+    System.out.println(Arrays.toString(data));
+    System.out.println(data.length);
+    System.out.println(length);
+    System.out.println(dataAsIntSize);
+    System.out.println(dataSize);
+
+    System.arraycopy(data, 0, buffer, 0, 3);
+
+    System.out.println(Arrays.toString(buffer));
+    if (dataSize < RATE_BYTES) {
+      buffer[getBufferIndex(dataSize)] |= 128 << (8 * (dataSize % 4));
     }
+    System.out.println(Arrays.toString(buffer));
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[i];
       state[i] = state[j] ^ buffer[i] ^ state[RATE_WORDS + i];
       state[j] ^= tmp ^ buffer[j] ^ state[RATE_WORDS + capIndex(j)];
     }
+  }
+
+  // TODO this can prob be made a lot smarter
+  private static int getBufferIndex(int length) {
+    if (length < 4) {
+      return 0;
+    } else if (length < 8) {
+      return 1;
+    } else if (length < 12) {
+      return 2;
+    }
+    return 3;
   }
 
   static void initialize(int[] state, byte[] key, byte[] nonce) {
@@ -211,7 +235,7 @@ public final class Schwaemm {
   }
 
   private static int bytesToIntSafe(byte[] bytes, int offset) {
-    if ((bytes.length - offset) % 4 == 0) {
+    if ((bytes.length - offset) % 4 == 0 || (bytes.length - offset) >= 4) {
       return Byte.toUnsignedInt(bytes[3 + offset]) << 24
           | Byte.toUnsignedInt(bytes[2 + offset]) << 16
           | Byte.toUnsignedInt(bytes[1 + offset]) << 8
