@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
@@ -115,6 +116,37 @@ public final class SchwaemmTest {
             new String[]{
                 schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
             });
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Schwaemm.encrypt(state, message);
+    Assertions.assertThat(cState).isEqualTo(state);
+  }
+
+  @Test
+  void processPlaintextHardcodedWithCipher() throws IOException, InterruptedException {
+    byte[] associate = new byte[]{86, -6, 98, 34, 123, -126, -101, 61, -49, 94, -44, 115, 78, -63,
+        -104, 74, 105, 3, 94};
+    byte[] message = new byte[]{-85, 23, 47, 88, 90, 30, 16, -78};
+
+    byte[] nonce = new byte[]{8, 104, 37, -84, -121, 127, 40, 14, -12, -31, 59, -78, 69, 79, 79,
+        -121};
+
+    byte[] key = new byte[]{-38, -55, -67, -41, -105, -47, -80, 112, -76, 17, 38, 28, 95, 12, 75,
+        82};
+
+    int[] state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    int[] cState =
+        callProcess(
+            new String[]{
+                schwaemmCpath, "encrypt", String.valueOf(19), String.valueOf(8)
+            });
+    byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
+    System.out.println(Arrays.toString(cipher));
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
