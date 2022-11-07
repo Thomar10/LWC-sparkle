@@ -57,17 +57,6 @@ public final class SchwaemmTest {
     // Files.write(Path.of(resourceSchwaemm + "/message"), new byte[0]);
   }
 
-  @Test
-  void what() throws IOException, InterruptedException {
-    Process process =
-        new ProcessBuilder(
-            Arrays.asList(new String[]{schwaemmCpath, "initialize"})).directory(
-            new File(resourceSchwaemm)).start();
-    int i = process.waitFor();
-    System.out.println(i);
-    System.out.println(i);
-    System.out.println(i);
-  }
 
   @RepeatedTest(50)
   void initializeTest() throws IOException, InterruptedException {
@@ -124,11 +113,64 @@ public final class SchwaemmTest {
     int[] cState =
         callProcess(
             new String[]{
-                schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomInt)
+                schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
             });
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
+    Schwaemm.encrypt(state, message);
+    Assertions.assertThat(cState).isEqualTo(state);
+  }
+
+  @Test
+  void processPlaintextHardcoded() throws IOException, InterruptedException {
+    byte[] associate = new byte[]{86, -6, 98, 34, 123, -126, -101, 61, -49, 94, -44, 115, 78, -63,
+        -104, 74, 105, 3, 94};
+    byte[] message = new byte[]{-85, 23, 47, 88, 90, 30, 16, -78};
+
+    byte[] nonce = new byte[]{8, 104, 37, -84, -121, 127, 40, 14, -12, -31, 59, -78, 69, 79, 79,
+        -121};
+
+    byte[] key = new byte[]{-38, -55, -67, -41, -105, -47, -80, 112, -76, 17, 38, 28, 95, 12, 75,
+        82};
+
+    int[] state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    int[] cState =
+        callProcess(
+            new String[]{
+                schwaemmCpath, "encrypt", String.valueOf(19), String.valueOf(8)
+            });
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Schwaemm.encrypt(state, message);
+    Assertions.assertThat(cState).isEqualTo(state);
+
+    associate = new byte[]{65, -14, -77, 49, 32, 32};
+    message = new byte[]{50, 29, 76, -86, 9, 7, -24, -45, 33, -99, -29, 17, -122, 8, 98, 108};
+
+    nonce = new byte[]{-117, -77, -114, -78, 5, -1, -111, 84, 91, 127, 15, 114, -42, -118, 12, 12};
+
+    key = new byte[]{-83, -50, 75, -28, -55, -67, 77, -76, -27, -63, 77, -7, 71, -84, 89, 52};
+
+    state = new int[8];
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    cState =
+        callProcess(
+            new String[]{
+                schwaemmCpath, "encrypt", String.valueOf(6), String.valueOf(16)
+            });
+
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    Schwaemm.encrypt(state, message);
     Assertions.assertThat(cState).isEqualTo(state);
   }
 

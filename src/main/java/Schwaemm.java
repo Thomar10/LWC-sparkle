@@ -50,19 +50,19 @@ public final class Schwaemm {
 
   // TODO should encrypt mutate a given buffer like the C or simply return cipher without space for
   // tag, and then genTag copies??
-  private static byte[] encrypt(int[] state, byte[] message) {
+  static byte[] encrypt(int[] state, byte[] message) {
     // TODO FIND OUT SIZE
-    int[] cipher = new int[8];
+    int[] cipher = new int[1000];
     int msgLength = message.length;
-    int[] msgAsInt = createIntArrayFromBytes(message, message.length);
+    int[] msgAsInt = createIntArrayFromBytes(message, (message.length - 1) / 4 + 1);
     int index = 0;
     int cipherIndex = 0;
     while (msgLength > RATE_BYTES) {
       rhoWhiEnc(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), cipher, cipherIndex);
-      Sparkle.sparkle256(state);
+      Sparkle.sparkle256Slim(state);
       msgLength -= RATE_BYTES;
-      index++;
-      cipherIndex++;
+      index += RATE_BYTES / 4;
+      cipherIndex += RATE_BYTES / 4;
     }
 
     // Encryption of Last Block
@@ -78,7 +78,6 @@ public final class Schwaemm {
             cipher,
             msgLength);
     Sparkle.sparkle256(state);
-
     return cipherBytes;
   }
 
@@ -96,12 +95,11 @@ public final class Schwaemm {
   private static byte[] rhoWhiEncLast(
       int[] state, int[] data, int length, int[] cipher, int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, length);
-    if (length < RATE_WORDS) {
-      // Fatter ikke hvad der sker ved *bufptr = 0x80 pt.
-      // Ser dog ud til dette virker, må tjekke senere.
-      buffer[0] = 32818;
+    System.arraycopy(data, 0, buffer, 0, data.length);
+    if (length < RATE_BYTES) {
+      buffer[getBufferIndex(length)] |= 128 << (8 * (length % 4));
     }
+
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[i];
       int tmp2 = state[j];
@@ -110,6 +108,7 @@ public final class Schwaemm {
       buffer[i] ^= tmp1;
       buffer[j] ^= tmp2;
     }
+    // TODO copy length amount of bytes into cipher at given index.
     byte[] dest = new byte[17];
 //        memcpyIssh(buffer, dest, cipherIndex);
     return dest;
