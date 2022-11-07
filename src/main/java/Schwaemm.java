@@ -18,12 +18,11 @@ public final class Schwaemm {
   private static final int KEY_BYTES = SCHWAEMM_KEY_LEN / 8; // 16
 
   private static final int CAP_BRANS = SPARKLE_CAPACITY / 64; // 2
-  private static final int CAP_WORDS = SPARKLE_CAPACITY / 32; // 4
-
   private static final int CONST_A0 = (1 << CAP_BRANS) << 24;
   private static final int CONST_A1 = (1 ^ (1 << CAP_BRANS)) << 24;
   private static final int CONST_M2 = (2 ^ (1 << CAP_BRANS)) << 24;
   private static final int CONST_M3 = (3 ^ (1 << CAP_BRANS)) << 24;
+  private static final int CAP_WORDS = SPARKLE_CAPACITY / 32; // 4
 
   public static byte[] encryptAndTag(byte[] message, byte[] assoData, byte[] key, byte[] nonce) {
     int[] state = new int[STATE_WORDS];
@@ -112,7 +111,7 @@ public final class Schwaemm {
       buffer[j] ^= tmp2;
     }
     byte[] dest = new byte[17];
-    memcpyIssh(buffer, dest, cipherIndex);
+//        memcpyIssh(buffer, dest, cipherIndex);
     return dest;
   }
 
@@ -120,24 +119,22 @@ public final class Schwaemm {
    * Absorbs the data into the state.
    *
    * @param state state
-   * @param data data to be absorbed
+   * @param data  data to be absorbed
    */
   static void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
     int[] dataAsInt = createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
-    int dataAsIntSize = dataAsInt.length;
     int index = 0;
     while (dataSize > RATE_BYTES) {
       rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
       Sparkle.sparkle256Slim(state);
       dataSize -= RATE_BYTES;
-      dataAsIntSize--;
-      index++;
+      index += RATE_BYTES / 4;
     }
 
     // LAST BLOCK
     state[STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
-    rhoWhiAutLast(state, dataAsInt, index, dataAsIntSize, dataSize);
+    rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length), dataSize);
     Sparkle.sparkle256(state);
   }
 
@@ -156,23 +153,14 @@ public final class Schwaemm {
     return i;
   }
 
-  private static void rhoWhiAutLast(
-      int[] state, int[] data, int length, int dataAsIntSize, int dataSize) {
+  private static void rhoWhiAutLast(int[] state, int[] data, int length) {
     int[] buffer = new int[RATE_WORDS];
-    System.out.println();
-    System.out.println(Arrays.toString(data));
-    System.out.println(data.length);
-    System.out.println(length);
-    System.out.println(dataAsIntSize);
-    System.out.println(dataSize);
 
-    System.arraycopy(data, 0, buffer, 0, 3);
+    System.arraycopy(data, 0, buffer, 0, data.length);
 
-    System.out.println(Arrays.toString(buffer));
-    if (dataSize < RATE_BYTES) {
-      buffer[getBufferIndex(dataSize)] |= 128 << (8 * (dataSize % 4));
+    if (length < RATE_BYTES) {
+      buffer[getBufferIndex(length)] |= 128 << (8 * (length % 4));
     }
-    System.out.println(Arrays.toString(buffer));
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[i];
@@ -209,11 +197,6 @@ public final class Schwaemm {
     return result;
   }
 
-  // TODO ACTUALLY MAKE THIS XD
-  private static byte[] memcpyIssh(int[] src, byte[] dest, int length) {
-    dest[0] = getSomething(src[0], length);
-    return dest;
-  }
 
   private static int[] createIntArrayFromBytes(byte[] bytes, int length) {
     int[] result = new int[length];
@@ -221,17 +204,6 @@ public final class Schwaemm {
       result[i] = bytesToIntSafe(bytes, i * 4);
     }
     return result;
-  }
-
-  private static byte getSomething(int number, int something) {
-    if (something == 1) {
-      return (byte) number;
-    } else if (something == 2) {
-      return (byte) (number >>> 8);
-    } else if (something == 3) {
-      return (byte) (number >>> 16);
-    }
-    return (byte) (number >>> 24);
   }
 
   private static int bytesToIntSafe(byte[] bytes, int offset) {
