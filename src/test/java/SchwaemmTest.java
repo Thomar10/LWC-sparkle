@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 public final class SchwaemmTest {
 
   private static final String schwaemmCpath =
-      SparkleTest.class.getResource("/schwaemm/schwaemmC").getPath();
+      SparkleTest.class.getResource("/schwaemm/schwaemmC.exe").getPath();
 
   private static final String resourceSchwaemm =
       System.getProperty("user.dir") + "/src/test/resources/schwaemm";
@@ -55,6 +55,18 @@ public final class SchwaemmTest {
     // Files.write(Path.of(resourceSchwaemm + "/nonce"), new byte[0]);
     // Files.write(Path.of(resourceSchwaemm + "/associate"), new byte[0]);
     // Files.write(Path.of(resourceSchwaemm + "/message"), new byte[0]);
+  }
+
+  @Test
+  void what() throws IOException, InterruptedException {
+    Process process =
+        new ProcessBuilder(
+            Arrays.asList(new String[]{schwaemmCpath, "initialize"})).directory(
+            new File(resourceSchwaemm)).start();
+    int i = process.waitFor();
+    System.out.println(i);
+    System.out.println(i);
+    System.out.println(i);
   }
 
   @RepeatedTest(50)
