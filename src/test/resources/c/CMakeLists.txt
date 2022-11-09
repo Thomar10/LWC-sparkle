@@ -20,3 +20,17 @@ add_executable(schwaemmC
 add_executable(sparkleC
         Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/sparkle_opt.c
         Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/sparkle_opt.h)
+
+add_library(schwaemm SHARED
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/api.h
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/crypto_aead.h
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/encrypt.c
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/genkat_aead.c
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/schwaemm_cfg.h
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_fast/sparkle_opt.c
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_fast/sparkle_opt.h)
+
+add_library(sparkle SHARED
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/sparkle_opt.c
+        Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/sparkle_opt.h)
+
