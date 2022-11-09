@@ -2,20 +2,37 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-/** Test java implementation with C implementation of sparkle. */
+/**
+ * Test java implementation with C implementation of sparkle.
+ */
 public final class SparkleTest {
-
-  private static final String sparkleCpath =
-      SparkleTest.class.getResource("/sparkle/sparkleC").getPath();
 
   private static final String resourceSparkle =
       System.getProperty("user.dir") + "/src/test/resources/sparkle";
+
+  private static String sparkleCpath = SparkleTest.class.getResource("/sparkle/sparkleC")
+      .getPath();
+
+  static {
+    String operatingSystem = System.getProperty("os.name");
+    if (operatingSystem.contains("Windows")) {
+      sparkleCpath += ".exe";
+    }
+  }
+
+  @AfterAll
+  public static void tearDown() throws IOException {
+    Files.write(Path.of(resourceSparkle + "/sparkleState"), new byte[0]);
+  }
 
 
   @Test
@@ -74,7 +91,7 @@ public final class SparkleTest {
     if (result != 0) {
       printError(process);
     }
-    File myObj = new File(resourceSparkle + "/test");
+    File myObj = new File(resourceSparkle + "/sparkleState");
     Scanner scanner = new Scanner(myObj);
     int[] cState = new int[Sparkle.maxBranches * 2];
     int i = 0;

@@ -57,292 +57,283 @@ void fprint_bstr(FILE *fp, const char *label, const UChar *data, ULLInt length);
 
 int generate_test_vectors(void);
 
+
 int main(int argc, char *argv[]) {
-  uint32_t state[8];
-  uint8_t *bufferNonce;
-  uint8_t *bufferKey;
-  FILE *fileptr;
-  long filelen;
+    uint32_t state[8];
+    uint8_t *bufferNonce;
+    uint8_t *bufferKey;
+    FILE *fileptr;
+    long filelen;
 
-  fileptr = fopen("nonce", "rb");
-  fseek(fileptr, 0, SEEK_END);
-  filelen = ftell(fileptr);
-  rewind(fileptr);
+    fileptr = fopen("nonce", "rb");
+    fseek(fileptr, 0, SEEK_END);
+    filelen = ftell(fileptr);
+    rewind(fileptr);
 
-  bufferNonce = (uint8_t *)malloc(filelen * sizeof(uint8_t));
-  fread(bufferNonce, filelen, 1, fileptr);
+    bufferNonce = (uint8_t *) malloc(filelen * sizeof(uint8_t));
+    fread(bufferNonce, filelen, 1, fileptr);
 
-  fclose(fileptr);
+    fclose(fileptr);
 
-  FILE *fileptrKey;
-  long filelenKey;
+    FILE *fileptrKey;
+    long filelenKey;
 
-  fileptrKey = fopen("key", "rb");
-  fseek(fileptrKey, 0, SEEK_END);
-  filelenKey = ftell(fileptrKey);
-  rewind(fileptrKey);
+    fileptrKey = fopen("key", "rb");
+    fseek(fileptrKey, 0, SEEK_END);
+    filelenKey = ftell(fileptrKey);
+    rewind(fileptrKey);
 
-  bufferKey = (uint8_t *)malloc(filelenKey * sizeof(uint8_t));
-  fread(bufferKey, filelenKey, 1, fileptrKey);
-  fclose(fileptrKey);
+    bufferKey = (uint8_t *) malloc(filelenKey * sizeof(uint8_t));
+    fread(bufferKey, filelenKey, 1, fileptrKey);
+    fclose(fileptrKey);
 
-  if (strcmp(argv[1], "initialize") == 0) {
-    Initialize(state, bufferKey, bufferNonce);
-  }
-
-  if (strcmp(argv[1], "associate") == 0) {
-    int assLength = atoi(argv[2]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
-
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
-
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
-  }
-  if (strcmp(argv[1], "encrypt") == 0) {
-    int assLength = atoi(argv[2]);
-    int messageLength = atoi(argv[3]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
-
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
-
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
-
-    uint8_t *bufferMsg;
-    FILE *fileptrMsg;
-    long filelenMsg;
-
-    fileptrMsg = fopen("message", "rb");
-    fseek(fileptrMsg, 0, SEEK_END);
-    filelenMsg = ftell(fileptrMsg);
-    rewind(fileptrMsg);
-
-    bufferMsg = (uint8_t *)malloc(filelenMsg * sizeof(uint8_t));
-    fread(bufferMsg, filelenMsg, 1, fileptrMsg);
-    fclose(fileptrMsg);
-
-    // No tag for this test.
-    int cipherLength = messageLength + CRYPTO_ABYTES;
-    uint8_t cipher[cipherLength];
-    // Zero out to be sure
-    for (int i = 0; i < cipherLength; i++) {
-      cipher[i] = 0;
+    if (strcmp(argv[1], "initialize") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
     }
 
-    ProcessPlainText(state, cipher, bufferMsg, messageLength);
-    FILE *writeCipher = fopen("cipher", "wb");
-    if (writeCipher) {
-      fwrite(cipher, cipherLength, 1, writeCipher);
+    if (strcmp(argv[1], "associate") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
+
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
+
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
     }
-    fclose(writeCipher);
-  }
-  if (strcmp(argv[1], "finalize") == 0) {
-    int assLength = atoi(argv[2]);
-    int messageLength = atoi(argv[3]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
+    if (strcmp(argv[1], "encrypt") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
 
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
 
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
 
-    uint8_t *bufferMsg;
-    FILE *fileptrMsg;
-    long filelenMsg;
+        uint8_t *messageBuffer;
+        FILE *messageFilePtr;
+        long messageLength;
 
-    fileptrMsg = fopen("message", "rb");
-    fseek(fileptrMsg, 0, SEEK_END);
-    filelenMsg = ftell(fileptrMsg);
-    rewind(fileptrMsg);
+        messageFilePtr = fopen("message", "rb");
+        fseek(messageFilePtr, 0, SEEK_END);
+        messageLength = ftell(messageFilePtr);
+        rewind(messageFilePtr);
 
-    bufferMsg = (uint8_t *)malloc(filelenMsg * sizeof(uint8_t));
-    fread(bufferMsg, filelenMsg, 1, fileptrMsg);
-    fclose(fileptrMsg);
-    // Cipher is anyway unused
-    uint8_t cipher[48];
+        messageBuffer = (uint8_t *) malloc(messageLength * sizeof(uint8_t));
+        fread(messageBuffer, messageLength, 1, messageFilePtr);
+        fclose(messageFilePtr);
 
-    ProcessPlainText(state, cipher, bufferMsg, messageLength);
-    Finalize(state, bufferKey);
-  }
-  if (strcmp(argv[1], "generateTag") == 0) {
-    int assLength = atoi(argv[2]);
-    int messageLength = atoi(argv[3]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
+        // No tag for this test.
+        int cipherLength = messageLength + CRYPTO_ABYTES;
+        uint8_t cipher[cipherLength];
+        // Zero out to be sure
+        for (int i = 0; i < cipherLength; i++) {
+            cipher[i] = 0;
+        }
 
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
+        ProcessPlainText(state, cipher, messageBuffer, messageLength);
+        FILE *writeCipher = fopen("cipher", "wb");
+        if (writeCipher) {
+            fwrite(cipher, cipherLength, 1, writeCipher);
+        }
+        fclose(writeCipher);
+    }
+    if (strcmp(argv[1], "finalize") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
 
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
 
-    uint8_t *bufferMsg;
-    FILE *fileptrMsg;
-    long filelenMsg;
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
 
-    fileptrMsg = fopen("message", "rb");
-    fseek(fileptrMsg, 0, SEEK_END);
-    filelenMsg = ftell(fileptrMsg);
-    rewind(fileptrMsg);
+        uint8_t *messageBuffer;
+        FILE *messageFilePtr;
+        long messageLength;
 
-    bufferMsg = (uint8_t *)malloc(filelenMsg * sizeof(uint8_t));
-    fread(bufferMsg, filelenMsg, 1, fileptrMsg);
-    fclose(fileptrMsg);
-    int cipherLength = messageLength + CRYPTO_ABYTES;
-    uint8_t cipher[cipherLength];
-    // Zero out to be sure
-    for (int i = 0; i < cipherLength; i++) {
-      cipher[i] = 0;
+        messageFilePtr = fopen("message", "rb");
+        fseek(messageFilePtr, 0, SEEK_END);
+        messageLength = ftell(messageFilePtr);
+        rewind(messageFilePtr);
+
+        messageBuffer = (uint8_t *) malloc(messageLength * sizeof(uint8_t));
+        fread(messageBuffer, messageLength, 1, messageFilePtr);
+        fclose(messageFilePtr);
+        // Cipher is anyway unused
+        uint8_t cipher[48];
+
+        ProcessPlainText(state, cipher, messageBuffer, messageLength);
+        Finalize(state, bufferKey);
+    }
+    if (strcmp(argv[1], "generateTag") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
+
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
+
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
+
+        uint8_t *messageBuffer;
+        FILE *messageFilePtr;
+        long messageLength;
+
+        messageFilePtr = fopen("message", "rb");
+        fseek(messageFilePtr, 0, SEEK_END);
+        messageLength = ftell(messageFilePtr);
+        rewind(messageFilePtr);
+
+        messageBuffer = (uint8_t *) malloc(messageLength * sizeof(uint8_t));
+        fread(messageBuffer, messageLength, 1, messageFilePtr);
+        fclose(messageFilePtr);
+        int cipherLength = messageLength + CRYPTO_ABYTES;
+        uint8_t cipher[cipherLength];
+        // Zero out to be sure
+        for (int i = 0; i < cipherLength; i++) {
+            cipher[i] = 0;
+        }
+
+        ProcessPlainText(state, cipher, messageBuffer, messageLength);
+        Finalize(state, bufferKey);
+        GenerateTag(state, (cipher + messageLength));
+        FILE *writeCipher = fopen("cipher", "wb");
+        if (writeCipher) {
+            fwrite(cipher, cipherLength, 1, writeCipher);
+        }
+        fclose(writeCipher);
+    }
+    // crypto_aead_encrypt
+    if (strcmp(argv[1], "fullFunction") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
+
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
+
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
+
+        uint8_t *messageBuffer;
+        FILE *filemessageFilePtrtrMsg;
+        long messageLength;
+
+        filemessageFilePtrtrMsg = fopen("message", "rb");
+        fseek(filemessageFilePtrtrMsg, 0, SEEK_END);
+        messageLength = ftell(filemessageFilePtrtrMsg);
+        rewind(filemessageFilePtrtrMsg);
+
+        messageBuffer = (uint8_t *) malloc(messageLength * sizeof(uint8_t));
+        fread(messageBuffer, messageLength, 1, filemessageFilePtrtrMsg);
+        fclose(filemessageFilePtrtrMsg);
+        int cipherLength = messageLength + CRYPTO_ABYTES;
+        uint8_t cipher[cipherLength];
+        // Zero out to be sure
+        for (int i = 0; i < cipherLength; i++) {
+            cipher[i] = 0;
+        }
+        ULLInt clen;
+        crypto_aead_encrypt(cipher, &clen, messageBuffer, messageLength, associateBuffer,
+                            associateLength, NULL, bufferNonce, bufferKey);
+        FILE *writeCipher = fopen("cipher", "wb");
+        if (writeCipher) {
+            fwrite(cipher, cipherLength, 1, writeCipher);
+        }
+        fclose(writeCipher);
+    }
+    if (strcmp(argv[1], "encryptAndDecrypt") == 0) {
+        Initialize(state, bufferKey, bufferNonce);
+        uint8_t *associateBuffer;
+        FILE *associateFilePtr;
+        long associateLength;
+
+        associateFilePtr = fopen("associate", "rb");
+        fseek(associateFilePtr, 0, SEEK_END);
+        associateLength = ftell(associateFilePtr);
+        rewind(associateFilePtr);
+
+        associateBuffer = (uint8_t *) malloc(associateLength * sizeof(uint8_t));
+        fread(associateBuffer, associateLength, 1, associateFilePtr);
+        fclose(associateFilePtr);
+        ProcessAssocData(state, associateBuffer, associateLength);
+
+        uint8_t *messageBuffer;
+        FILE *messageFilePtr;
+        long messageLength;
+
+        messageFilePtr = fopen("message", "rb");
+        fseek(messageFilePtr, 0, SEEK_END);
+        messageLength = ftell(messageFilePtr);
+        rewind(messageFilePtr);
+
+        messageBuffer = (uint8_t *) malloc(messageLength * sizeof(uint8_t));
+        fread(messageBuffer, messageLength, 1, messageFilePtr);
+        fclose(messageFilePtr);
+
+        int cipherLength = messageLength + CRYPTO_ABYTES;
+        uint8_t cipher[cipherLength];
+        // Zero out to be sure
+        for (int i = 0; i < cipherLength; i++) {
+            cipher[i] = 0;
+        }
+        ULLInt clen;
+        crypto_aead_encrypt(cipher, &clen, messageBuffer, messageLength, associateBuffer,
+                            associateLength, NULL, bufferNonce, bufferKey);
+        uint8_t message[messageLength];
+        // Zero out to be sure
+        for (int i = 0; i < messageLength; i++) {
+            message[i] = 0;
+        }
+        ULLInt mlen;
+        crypto_aead_decrypt(message, &mlen, NULL, cipher, clen, associateBuffer,
+                            associateLength, bufferNonce, bufferKey);
+
+        FILE *writeMessage = fopen("messageBack", "wb");
+        if (writeMessage) {
+            fwrite(message, messageLength, 1, writeMessage);
+        }
+        fclose(writeMessage);
     }
 
-    ProcessPlainText(state, cipher, bufferMsg, messageLength);
-    Finalize(state, bufferKey);
-    GenerateTag(state, (cipher + messageLength));
-    FILE *writeCipher = fopen("cipher", "wb");
-    if (writeCipher) {
-      fwrite(cipher, cipherLength, 1, writeCipher);
+    FILE *f = fopen("schwaemmState", "wt");
+    for (int i = 0; i < 8; ++i) {
+        fprintf(f, "%d\n", state[i]);
     }
-    fclose(writeCipher);
-  }
-  // crypto_aead_encrypt
-  if (strcmp(argv[1], "fullFunction") == 0) {
-    int assLength = atoi(argv[2]);
-    int messageLength = atoi(argv[3]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
-
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
-
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
-
-    uint8_t *bufferMsg;
-    FILE *fileptrMsg;
-    long filelenMsg;
-
-    fileptrMsg = fopen("message", "rb");
-    fseek(fileptrMsg, 0, SEEK_END);
-    filelenMsg = ftell(fileptrMsg);
-    rewind(fileptrMsg);
-
-    bufferMsg = (uint8_t *)malloc(filelenMsg * sizeof(uint8_t));
-    fread(bufferMsg, filelenMsg, 1, fileptrMsg);
-    fclose(fileptrMsg);
-    int cipherLength = messageLength + CRYPTO_ABYTES;
-    uint8_t cipher[cipherLength];
-    // Zero out to be sure
-    for (int i = 0; i < cipherLength; i++) {
-      cipher[i] = 0;
-    }
-    ULLInt clen;
-    crypto_aead_encrypt(cipher, &clen, bufferMsg, messageLength, bufferAss,
-                        assLength, NULL, bufferNonce, bufferKey);
-    FILE *writeCipher = fopen("cipher", "wb");
-    if (writeCipher) {
-      fwrite(cipher, cipherLength, 1, writeCipher);
-    }
-    fclose(writeCipher);
-  }
-  if (strcmp(argv[1], "encryptAndDecrypt") == 0) {
-    int assLength = atoi(argv[2]);
-    int messageLength = atoi(argv[3]);
-    Initialize(state, bufferKey, bufferNonce);
-    uint8_t *bufferAss;
-    FILE *fileptrAss;
-    long filelenAss;
-
-    fileptrAss = fopen("associate", "rb");
-    fseek(fileptrAss, 0, SEEK_END);
-    filelenAss = ftell(fileptrAss);
-    rewind(fileptrAss);
-
-    bufferAss = (uint8_t *)malloc(filelenAss * sizeof(uint8_t));
-    fread(bufferAss, filelenAss, 1, fileptrAss);
-    fclose(fileptrAss);
-    ProcessAssocData(state, bufferAss, assLength);
-
-    uint8_t *bufferMsg;
-    FILE *fileptrMsg;
-    long filelenMsg;
-
-    fileptrMsg = fopen("message", "rb");
-    fseek(fileptrMsg, 0, SEEK_END);
-    filelenMsg = ftell(fileptrMsg);
-    rewind(fileptrMsg);
-
-    bufferMsg = (uint8_t *)malloc(filelenMsg * sizeof(uint8_t));
-    fread(bufferMsg, filelenMsg, 1, fileptrMsg);
-    fclose(fileptrMsg);
-    int cipherLength = messageLength + CRYPTO_ABYTES;
-    uint8_t cipher[cipherLength];
-    // Zero out to be sure
-    for (int i = 0; i < cipherLength; i++) {
-      cipher[i] = 0;
-    }
-    ULLInt clen;
-    crypto_aead_encrypt(cipher, &clen, bufferMsg, messageLength, bufferAss,
-                        assLength, NULL, bufferNonce, bufferKey);
-    uint8_t message[messageLength];
-    // Zero out to be sure
-    for (int i = 0; i < messageLength; i++) {
-      message[i] = 0;
-    }
-    ULLInt mlen;
-    int res = crypto_aead_decrypt(message, &mlen, NULL, cipher, clen, bufferAss,
-                        assLength, bufferNonce, bufferKey);
-    printf("res = %d\n", res);
-
-    FILE *writeMessage = fopen("messageBack", "wb");
-    if (writeMessage) {
-      fwrite(message, messageLength, 1, writeMessage);
-    }
-    fclose(writeMessage);
-  }
-
-  FILE *f = fopen("schwaemm", "wt");
-  for (int i = 0; i < 8; ++i) {
-    fprintf(f, "%d\n", state[i]);
-  }
-  fclose(f);
+    fclose(f);
 }
+
 
 /*
 int main(void) {
@@ -358,101 +349,101 @@ int main(void) {
  */
 
 int generate_test_vectors(void) {
-  FILE *fp;
-  char fileName[MAX_FILE_NAME];
-  UChar key[CRYPTO_KEYBYTES];
-  UChar nonce[CRYPTO_NPUBBYTES];
-  UChar msg[MAX_MESSAGE_LENGTH];
-  UChar msg2[MAX_MESSAGE_LENGTH];
-  UChar ad[MAX_ASSOCIATED_DATA_LENGTH];
-  UChar ct[MAX_MESSAGE_LENGTH + CRYPTO_ABYTES];
-  ULLInt clen, mlen2;
-  ULLInt mlen, adlen;
-  int count = 1;
-  int func_ret, ret_val = KAT_SUCCESS;
+    FILE *fp;
+    char fileName[MAX_FILE_NAME];
+    UChar key[CRYPTO_KEYBYTES];
+    UChar nonce[CRYPTO_NPUBBYTES];
+    UChar msg[MAX_MESSAGE_LENGTH];
+    UChar msg2[MAX_MESSAGE_LENGTH];
+    UChar ad[MAX_ASSOCIATED_DATA_LENGTH];
+    UChar ct[MAX_MESSAGE_LENGTH + CRYPTO_ABYTES];
+    ULLInt clen, mlen2;
+    ULLInt mlen, adlen;
+    int count = 1;
+    int func_ret, ret_val = KAT_SUCCESS;
 
-  init_buffer(key, sizeof(key));
-  init_buffer(nonce, sizeof(nonce));
-  init_buffer(msg, sizeof(msg));
-  init_buffer(ad, sizeof(ad));
+    init_buffer(key, sizeof(key));
+    init_buffer(nonce, sizeof(nonce));
+    init_buffer(msg, sizeof(msg));
+    init_buffer(ad, sizeof(ad));
 
-  sprintf(fileName, "LWC_AEAD_KAT_%d_%d.txt", (CRYPTO_KEYBYTES * 8),
-          (CRYPTO_NPUBBYTES * 8));
-  printf("File we look in = LWC_AEAD_KAT_%d_%d.txt \n", (CRYPTO_KEYBYTES * 8),
-         (CRYPTO_NPUBBYTES * 8));
-  if ((fp = fopen(fileName, "w")) == NULL) {
-    fprintf(stderr, "Couldn't open <%s> for write\n", fileName);
-    return KAT_FILE_OPEN_ERROR;
-  }
-
-  for (mlen = 0; (mlen <= MAX_MESSAGE_LENGTH) && (ret_val == KAT_SUCCESS);
-       mlen++) {
-
-    for (adlen = 0; adlen <= MAX_ASSOCIATED_DATA_LENGTH; adlen++) {
-
-      fprintf(fp, "Count = %d\n", count++);
-      fprint_bstr(fp, "Key = ", key, CRYPTO_KEYBYTES);
-      fprint_bstr(fp, "Nonce = ", nonce, CRYPTO_NPUBBYTES);
-      fprint_bstr(fp, "PT = ", msg, mlen);
-      fprint_bstr(fp, "AD = ", ad, adlen);
-      if (count == 3) {
-        printf("adlen = %llu\n", adlen);
-        printf("ad: %d\n", ad[0]);
-        printf("ad: %d\n", ad[1]);
-      }
-
-      func_ret = crypto_aead_encrypt(ct, &clen, msg, mlen, ad, adlen, NULL,
-                                     nonce, key);
-      if (func_ret != 0) {
-        fprintf(fp, "crypto_aead_encrypt returned <%d>\n", func_ret);
-        ret_val = KAT_CRYPTO_FAILURE;
-        break;
-      }
-
-      fprint_bstr(fp, "CT = ", ct, clen);
-      fprintf(fp, "\n");
-
-      func_ret = crypto_aead_decrypt(msg2, &mlen2, NULL, ct, clen, ad, adlen,
-                                     nonce, key);
-      if (func_ret != 0) {
-        fprintf(fp, "crypto_aead_decrypt returned <%d>\n", func_ret);
-        ret_val = KAT_CRYPTO_FAILURE;
-        break;
-      }
-
-      if (mlen != mlen2) {
-        fprintf(fp, "crypto_aead_decrypt returned bad 'mlen': Got <%llu>, \
-                expected <%llu>\n",
-                mlen2, mlen);
-        ret_val = KAT_CRYPTO_FAILURE;
-        break;
-      }
-
-      if (memcmp(msg, msg2, ((size_t)mlen))) {
-        fprintf(fp, "crypto_aead_decrypt did not recover the plaintext\n");
-        ret_val = KAT_CRYPTO_FAILURE;
-        break;
-      }
+    sprintf(fileName, "LWC_AEAD_KAT_%d_%d.txt", (CRYPTO_KEYBYTES * 8),
+            (CRYPTO_NPUBBYTES * 8));
+    printf("File we look in = LWC_AEAD_KAT_%d_%d.txt \n", (CRYPTO_KEYBYTES * 8),
+           (CRYPTO_NPUBBYTES * 8));
+    if ((fp = fopen(fileName, "w")) == NULL) {
+        fprintf(stderr, "Couldn't open <%s> for write\n", fileName);
+        return KAT_FILE_OPEN_ERROR;
     }
-  }
 
-  fclose(fp);
-  return ret_val;
+    for (mlen = 0; (mlen <= MAX_MESSAGE_LENGTH) && (ret_val == KAT_SUCCESS);
+         mlen++) {
+
+        for (adlen = 0; adlen <= MAX_ASSOCIATED_DATA_LENGTH; adlen++) {
+
+            fprintf(fp, "Count = %d\n", count++);
+            fprint_bstr(fp, "Key = ", key, CRYPTO_KEYBYTES);
+            fprint_bstr(fp, "Nonce = ", nonce, CRYPTO_NPUBBYTES);
+            fprint_bstr(fp, "PT = ", msg, mlen);
+            fprint_bstr(fp, "AD = ", ad, adlen);
+            if (count == 3) {
+                printf("adlen = %llu\n", adlen);
+                printf("ad: %d\n", ad[0]);
+                printf("ad: %d\n", ad[1]);
+            }
+
+            func_ret = crypto_aead_encrypt(ct, &clen, msg, mlen, ad, adlen, NULL,
+                                           nonce, key);
+            if (func_ret != 0) {
+                fprintf(fp, "crypto_aead_encrypt returned <%d>\n", func_ret);
+                ret_val = KAT_CRYPTO_FAILURE;
+                break;
+            }
+
+            fprint_bstr(fp, "CT = ", ct, clen);
+            fprintf(fp, "\n");
+
+            func_ret = crypto_aead_decrypt(msg2, &mlen2, NULL, ct, clen, ad, adlen,
+                                           nonce, key);
+            if (func_ret != 0) {
+                fprintf(fp, "crypto_aead_decrypt returned <%d>\n", func_ret);
+                ret_val = KAT_CRYPTO_FAILURE;
+                break;
+            }
+
+            if (mlen != mlen2) {
+                fprintf(fp, "crypto_aead_decrypt returned bad 'mlen': Got <%llu>, \
+                expected <%llu>\n",
+                        mlen2, mlen);
+                ret_val = KAT_CRYPTO_FAILURE;
+                break;
+            }
+
+            if (memcmp(msg, msg2, ((size_t) mlen))) {
+                fprintf(fp, "crypto_aead_decrypt did not recover the plaintext\n");
+                ret_val = KAT_CRYPTO_FAILURE;
+                break;
+            }
+        }
+    }
+
+    fclose(fp);
+    return ret_val;
 }
 
 void fprint_bstr(FILE *fp, const char *label, const UChar *data,
                  ULLInt length) {
-  ULLInt i;
+    ULLInt i;
 
-  fprintf(fp, "%s", label);
-  for (i = 0; i < length; i++)
-    fprintf(fp, "%02X", data[i]);
-  fprintf(fp, "\n");
+    fprintf(fp, "%s", label);
+    for (i = 0; i < length; i++)
+        fprintf(fp, "%02X", data[i]);
+    fprintf(fp, "\n");
 }
 
 void init_buffer(UChar *buffer, ULLInt numbytes) {
-  ULLInt i;
+    ULLInt i;
 
-  for (i = 0; i < numbytes; i++)
-    buffer[i] = (UChar)i;
+    for (i = 0; i < numbytes; i++)
+        buffer[i] = (UChar) i;
 }

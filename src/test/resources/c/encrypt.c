@@ -294,23 +294,13 @@ static void rho_whi_dec_last(uint32_t *state, uint8_t *out, const uint8_t *in,
   int i, j;
 
   memcpy(buffer, in, inlen);
-  printf("\n");
-  puts("Buffer\n");
-  for (int i = 0; i < 4; i++) {
-    printf("%d\n", buffer[i]);
-  }
-  printf("\n");
-  printf("%zu\n", inlen);
+
   if (inlen < RATE_BYTES) { // padding
     bufptr = ((uint8_t *)buffer) + inlen;
     memcpy(bufptr, (((uint8_t *)state) + inlen), (RATE_BYTES - inlen));
     *bufptr ^= 0x80;
   }
-  printf("buffer after\n");
-  for (int i = 0; i < 4; i++) {
-    printf("%d\n", buffer[i]);
-  }
-  printf("\n");
+
   for (i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
     tmp1 = state[i];
     tmp2 = state[j];
@@ -318,10 +308,6 @@ static void rho_whi_dec_last(uint32_t *state, uint8_t *out, const uint8_t *in,
     state[j] = tmp1 ^ buffer[j] ^ state[RATE_WORDS + CAP_INDEX(j)];
     buffer[i] ^= tmp1;
     buffer[j] ^= tmp2;
-    printf("\n");
-  }
-  for (int i = 0; i < 8; i++) {
-    printf("%d\n", state[i]);
   }
 
   memcpy(out, buffer, inlen);

@@ -10,20 +10,22 @@ import java.util.Random;
 import java.util.Scanner;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 public final class SchwaemmTest {
 
-  private static final String schwaemmCpath =
-      SparkleTest.class.getResource("/schwaemm/schwaemmC.exe").getPath();
-
-  private static final String schwaemmCpathLinux =
-      SparkleTest.class.getResource("/schwaemm/schwaemmC").getPath();
-
   private static final String resourceSchwaemm =
       System.getProperty("user.dir") + "/src/test/resources/schwaemm";
+  private static String schwaemmCpath = SparkleTest.class.getResource("/schwaemm/schwaemmC")
+      .getPath();
+
+  static {
+    String operatingSystem = System.getProperty("os.name");
+    if (operatingSystem.contains("Windows")) {
+      schwaemmCpath += ".exe";
+    }
+  }
 
   private final Random random = new Random();
 
@@ -34,7 +36,7 @@ public final class SchwaemmTest {
     if (result != 0) {
       printError(process);
     }
-    File myObj = new File(resourceSchwaemm + "/schwaemm");
+    File myObj = new File(resourceSchwaemm + "/schwaemmState");
     Scanner scanner = new Scanner(myObj);
     int[] cState = new int[Sparkle.maxBranches];
     int i = 0;
@@ -60,6 +62,9 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), new byte[0]);
     Files.write(Path.of(resourceSchwaemm + "/associate"), new byte[0]);
     Files.write(Path.of(resourceSchwaemm + "/message"), new byte[0]);
+    Files.write(Path.of(resourceSchwaemm + "/cipher"), new byte[0]);
+    Files.write(Path.of(resourceSchwaemm + "/messageBack"), new byte[0]);
+    Files.write(Path.of(resourceSchwaemm + "/schwaemmState"), new byte[0]);
   }
 
   @RepeatedTest(50)
@@ -118,7 +123,7 @@ public final class SchwaemmTest {
     int[] cState =
         callProcess(
             new String[]{
-                schwaemmCpathLinux, "finalize", String.valueOf(randomInt), String.valueOf(randomMsg)
+                schwaemmCpath, "finalize", String.valueOf(randomInt), String.valueOf(randomMsg)
             });
 
     Schwaemm.initialize(state, key, nonce);
@@ -151,7 +156,7 @@ public final class SchwaemmTest {
     int[] cState =
         callProcess(
             new String[]{
-                schwaemmCpathLinux,
+                schwaemmCpath,
                 "generateTag",
                 String.valueOf(randomInt),
                 String.valueOf(randomMsg)
@@ -191,7 +196,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
     callProcess(
         new String[]{
-            schwaemmCpathLinux, "fullFunction", String.valueOf(randomInt), String.valueOf(randomMsg)
+            schwaemmCpath, "fullFunction", String.valueOf(randomInt), String.valueOf(randomMsg)
         });
     byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
 
@@ -221,7 +226,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
     callProcess(
         new String[]{
-            schwaemmCpathLinux, "encryptAndDecrypt", String.valueOf(randomInt),
+            schwaemmCpath, "encryptAndDecrypt", String.valueOf(randomInt),
             String.valueOf(randomMsg)
         });
     byte[] messageBack = Files.readAllBytes(Paths.get(resourceSchwaemm + "/messageBack"));
@@ -313,7 +318,7 @@ public final class SchwaemmTest {
     int[] cState =
         callProcess(
             new String[]{
-                schwaemmCpathLinux, "encrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
+                schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
             });
 
     byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
