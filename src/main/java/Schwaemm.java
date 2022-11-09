@@ -2,6 +2,7 @@ import java.util.Arrays;
 
 public final class Schwaemm {
 
+  private static final int BYTE_MASK = (1 << 8) - 1;
   private static final int SCHWAEMM_KEY_LEN = 128;
   private static final int SCHWAEMM_NONCE_LEN = 128;
   private static final int SCHWAEMM_TAG_LEN = 128;
@@ -24,17 +25,177 @@ public final class Schwaemm {
   private static final int CONST_M3 = (3 ^ (1 << CAP_BRANS)) << 24;
   private static final int CAP_WORDS = SPARKLE_CAPACITY / 32; // 4
 
+  public static byte[] decryptAndVerify(byte[] cipher, byte[] assoData, byte[] key, byte[] nonce) {
+    int[] state = new int[STATE_WORDS];
+    int cipherTextLength = cipher.length - TAG_BYTES;
+    initialize(state, key, nonce);
+    byte[] message = new byte[cipherTextLength];
+    if (assoData.length > 0) {
+      associateData(state, assoData);
+    }
+
+    decrypt(state, message, cipher);
+    finalize(state, key);
+
+    verifyTag(
+        state,
+        createIntArrayFromBytes(Arrays.copyOfRange(cipher, cipherTextLength, cipher.length), 4));
+    return message;
+  }
+
+  static void decrypt(int[] state, byte[] message, byte[] cipher) {
+    int cipherLength = message.length;
+    int[] cipherAsInt =
+        createIntArrayFromBytes(
+            Arrays.copyOfRange(cipher, 0, cipher.length - TAG_BYTES), (message.length - 1) / 4 + 1);
+    int index = 0;
+    int messageIndex = 0;
+    while (cipherLength > RATE_BYTES) {
+      int[] messageInt = new int[4];
+      rhoWhiDec(
+          state,
+          Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length),
+          messageInt,
+          messageIndex);
+      Sparkle.sparkle256Slim(state);
+      cipherLength -= RATE_BYTES;
+      index += RATE_BYTES / 4;
+      messageIndex += RATE_BYTES;
+      populateByteArrayFromInts(messageInt, message, 0, 16, 0);
+    }
+
+    state[STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
+
+    rhoWhiDecLast(
+        state,
+        Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length),
+        cipherLength,
+        message,
+        messageIndex);
+    Sparkle.sparkle256(state);
+  }
+
+  private static void copyLengthBytesFromStateToBuffer(int[] buffer, int[] state, int length) {
+    int rest = RATE_BYTES - length;
+    int unevenBytesInStart = rest % 4;
+    System.out.println("rest " + rest);
+    byte[] bytesCreated = new byte[4];
+    int index = length / 4;
+    System.out.println("index " + index);
+
+    intToBytes(state[index], bytesCreated, 0);
+    if (index == 0) {
+      buffer[index] = getIntFromBytes(length, buffer[index], bytesCreated);
+    } else {
+      buffer[index] = getIntFromBytes(unevenBytesInStart, buffer[index], bytesCreated);
+    }
+
+    for (; rest > 4; rest -= 4, index++) {
+      buffer[index + 1] = state[index + 1];
+    }
+    System.out.println("buffer before " + Arrays.toString(buffer));
+  }
+
+  private static int getIntFromBytes(int length, int bufferElement, byte[] bytes) {
+    if (length == 0) {
+      return bytesToIntSafe(bytes, 0);
+    }
+    if (length == 1) {
+      return bufferElement
+          | ((((int) bytes[1]) & BYTE_MASK) << 8)
+          | ((((int) bytes[2]) & BYTE_MASK) << 16)
+          | ((((int) bytes[3]) & BYTE_MASK) << 24);
+    }
+    if (length == 2) {
+      return bufferElement
+          | ((((int) bytes[2]) & BYTE_MASK) << 16)
+          | ((((int) bytes[3]) & BYTE_MASK) << 24);
+    }
+    /*System.out.println(Integer.toBinaryString(bufferElement
+        | ((((int) bytes[1]) & BYTE_MASK) << 8)
+        | ((((int) bytes[2]) & BYTE_MASK) << 16)
+        | ((((int) bytes[3]) & BYTE_MASK) << 24)));
+    System.out.println(Integer.toBinaryString(537295657));
+    System.out.println(Integer.toBinaryString(bytes[0]& BYTE_MASK));
+    System.out.println(Integer.toBinaryString(bytes[1]& BYTE_MASK));
+    System.out.println(Integer.toBinaryString(bytes[2]& BYTE_MASK));
+    System.out.println(Integer.toBinaryString(bytes[3]& BYTE_MASK));
+
+     */
+    return bufferElement
+        | ((((int) bytes[1]) & BYTE_MASK) << 8)
+        | ((((int) bytes[2]) & BYTE_MASK) << 16)
+        | ((((int) bytes[3]) & BYTE_MASK) << 24);
+    //return bufferElement | ((((int) bytes[3]) & BYTE_MASK) << 24);
+  }
+
+  private static void rhoWhiDecLast(
+      int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
+    int[] buffer = new int[RATE_WORDS];
+    System.arraycopy(data, 0, buffer, 0, data.length);
+
+    System.out.println();
+    for (int number : buffer) {
+      System.out.println(number);
+    }
+    System.out.println(length);
+    if (length < RATE_BYTES) {
+      copyLengthBytesFromStateToBuffer(buffer, state, length);
+      buffer[length / 4] ^= 128 << (8 * (length % 4));
+    }
+
+    System.out.println();
+    for (int number : buffer) {
+      System.out.println(number);
+    }
+    System.out.println();
+
+    for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
+      int tmp1 = state[i];
+      int tmp2 = state[j];
+      state[i] ^= state[j] ^ buffer[i] ^ state[RATE_WORDS + i];
+      state[j] = tmp1 ^ buffer[j] ^ state[RATE_WORDS + capIndex(j)];
+      buffer[i] ^= tmp1;
+      buffer[j] ^= tmp2;
+    }
+
+    populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
+  }
+
+  private static void rhoWhiDec(int[] state, int[] message, int[] cipher, int cipherIndex) {
+    for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
+      int tmp1 = state[i];
+      int tmp2 = state[j];
+      state[i] ^= state[j] ^ message[i] ^ state[RATE_WORDS + i];
+      state[j] = tmp1 ^ message[j] ^ state[RATE_WORDS + capIndex(j)];
+      cipher[i + cipherIndex] = message[i] ^ tmp1;
+      cipher[j + cipherIndex] = message[j] ^ tmp2;
+    }
+  }
+
+  static void verifyTag(int[] state, int[] tag) {
+    int diff = 0;
+    for (int i = 0; i < (TAG_BYTES / 4); i++) {
+      diff |= state[RATE_WORDS + i] ^ tag[i];
+    }
+    if (diff != 0) {
+      throw new RuntimeException("Could not verify tag!");
+    }
+  }
+
+  // TODO Make so it message can have length 0.
   public static byte[] encryptAndTag(byte[] message, byte[] assoData, byte[] key, byte[] nonce) {
     int[] state = new int[STATE_WORDS];
     initialize(state, key, nonce);
-    associateData(state, assoData);
+    if (assoData.length > 0) {
+      associateData(state, assoData);
+    }
     byte[] cipherText = encrypt(state, message);
     int[] intKey = createIntArrayFromBytes(key, KEY_BYTES / 4);
 
     finalize(state, intKey);
     return generateTag(state, cipherText, message.length);
   }
-
 
   static byte[] generateTag(int[] state, byte[] cipher, int messageLength) {
     populateByteArrayFromInts(state, cipher, RATE_WORDS, TAG_BYTES, messageLength);

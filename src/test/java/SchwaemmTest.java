@@ -55,10 +55,13 @@ public final class SchwaemmTest {
 
   @AfterEach
   public void tearDown() throws IOException {
+    /*
     Files.write(Path.of(resourceSchwaemm + "/key"), new byte[0]);
     Files.write(Path.of(resourceSchwaemm + "/nonce"), new byte[0]);
     Files.write(Path.of(resourceSchwaemm + "/associate"), new byte[0]);
     Files.write(Path.of(resourceSchwaemm + "/message"), new byte[0]);
+
+     */
   }
 
   @RepeatedTest(50)
@@ -197,6 +200,166 @@ public final class SchwaemmTest {
     byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
 
     Assertions.assertThat(cipher).isEqualTo(javaCipher);
+  }
+
+  @RepeatedTest(50)
+  void encryptAndDecryptC2() throws IOException, InterruptedException {
+    int randomInt = random.nextInt(32 - 1) + 1;
+    int randomMsg = random.nextInt(32 - 1) + 1;
+    System.out.println(randomInt);
+    System.out.println(randomMsg);
+    byte[] associate = new byte[randomInt];
+    byte[] message = new byte[randomMsg];
+    random.nextBytes(associate);
+    random.nextBytes(message);
+    System.out.println(Arrays.toString(associate));
+    System.out.println(Arrays.toString(message));
+
+    byte[] nonce = new byte[16];
+    random.nextBytes(nonce);
+    System.out.println(Arrays.toString(nonce));
+
+    byte[] key = new byte[16];
+    random.nextBytes(key);
+    System.out.println(Arrays.toString(key));
+
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    callProcess(
+        new String[] {
+          schwaemmCpathLinux, "encryptAndDecrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
+        });
+    byte[] messageBack = Files.readAllBytes(Paths.get(resourceSchwaemm + "/messageBack"));
+
+    byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
+    byte[] messageJava = Schwaemm.decryptAndVerify(javaCipher, associate, key, nonce);
+
+    Assertions.assertThat(message).isEqualTo(messageBack);
+    Assertions.assertThat(messageJava).isEqualTo(messageBack);
+  }
+
+  @Test
+  void encryptAndDecryptC3() throws IOException, InterruptedException {
+    byte[] associate =
+        new byte[] {3, -29, 59, 33, 127, -97, 87, -37, 121, 70, 4, 44, 56, -112, 116, -108, 20};
+    byte[] message = new byte[] {97, -31, -25, 116, -12, -74, -95, 35, 24, 80, -102, -57, -68, 14, 82, 44, -56, 76, -117, -90, 106, -8, 50, -15, -40, 74, -94, 57, 21};
+    // random.nextBytes(associate);
+    // random.nextBytes(message);
+
+    byte[] nonce =
+        new byte[] {39, 81, 49, 96, -9, -123, 96, 11, -95, 32, -109, 122, 96, 119, -8, -122};
+    // random.nextBytes(nonce);
+
+    byte[] key =
+        new byte[] {107, -69, -42, 126, -115, 48, 121, -26, 123, -82, -115, -6, 113, 39, 46, -124};
+
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    callProcess(
+        new String[] {
+            schwaemmCpathLinux, "encryptAndDecrypt", String.valueOf(17), String.valueOf(29)
+        });
+    byte[] messageBack = Files.readAllBytes(Paths.get(resourceSchwaemm + "/messageBack"));
+
+    byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
+    byte[] messageJava = Schwaemm.decryptAndVerify(javaCipher, associate, key, nonce);
+
+    Assertions.assertThat(message).isEqualTo(messageBack);
+    Assertions.assertThat(messageJava).isEqualTo(messageBack);
+  }
+
+  @Test
+  void encryptAndDecryptC() throws IOException, InterruptedException {
+    byte[] associate =
+        new byte[] {93, -84, -88, 28, 82, 90, -4, -123, -108, -50, 86, -103, -107, -13, 126, -35};
+    byte[] message = new byte[] {-108, 68};
+    // random.nextBytes(associate);
+    // random.nextBytes(message);
+
+    byte[] nonce =
+        new byte[] {113, 45, -90, 87, -103, 59, -31, -91, -76, 12, -105, -11, 108, 13, -59, -77};
+    // random.nextBytes(nonce);
+
+    byte[] key =
+        new byte[] {-115, 76, -40, -54, 23, 67, 91, -117, -63, -77, 35, -117, -71, -3, -4, 76};
+
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+    callProcess(
+        new String[] {
+          schwaemmCpathLinux, "encryptAndDecrypt", String.valueOf(16), String.valueOf(2)
+        });
+    byte[] messageBack = Files.readAllBytes(Paths.get(resourceSchwaemm + "/messageBack"));
+
+    byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
+    byte[] messageJava = Schwaemm.decryptAndVerify(javaCipher, associate, key, nonce);
+
+    Assertions.assertThat(message).isEqualTo(messageBack);
+    Assertions.assertThat(messageJava).isEqualTo(messageBack);
+  }
+
+
+  @RepeatedTest(50)
+  void encryptAndDecrypt() {
+    int randomInt = random.nextInt(32 - 1) + 1;
+    int randomMsg = random.nextInt(32 - 1) + 1;
+    byte[] associate = new byte[randomInt];
+    byte[] message = new byte[randomMsg];
+    random.nextBytes(associate);
+    random.nextBytes(message);
+
+    byte[] nonce = new byte[16];
+    random.nextBytes(nonce);
+
+    byte[] key = new byte[16];
+    random.nextBytes(key);
+
+    int[] state = new int[8];
+    Schwaemm.initialize(state, key, nonce);
+    Schwaemm.associateData(state, associate);
+    byte[] cipher = Schwaemm.encrypt(state, message);
+    Schwaemm.finalize(state, key);
+    byte[] javaCipher = Schwaemm.generateTag(state, cipher, message.length);
+
+    int[] decryptState = new int[8];
+    Schwaemm.initialize(decryptState, key, nonce);
+    Schwaemm.associateData(decryptState, associate);
+    byte[] messageBack = new byte[message.length];
+    Schwaemm.decrypt(decryptState, messageBack, javaCipher);
+    Assertions.assertThat(messageBack).isEqualTo(message);
+  }
+
+  @RepeatedTest(1)
+  void encryptTagAndDecryptVerify() throws IOException {
+
+    byte[] associate =
+        new byte[] {93, -84, -88, 28, 82, 90, -4, -123, -108, -50, 86, -103, -107, -13, 126, -35};
+    byte[] message = new byte[] {-108, 68};
+    // random.nextBytes(associate);
+    // random.nextBytes(message);
+
+    byte[] nonce =
+        new byte[] {113, 45, -90, 87, -103, 59, -31, -91, -76, 12, -105, -11, 108, 13, -59, -77};
+    // random.nextBytes(nonce);
+
+    byte[] key =
+        new byte[] {-115, 76, -40, -54, 23, 67, 91, -117, -63, -77, 35, -117, -71, -3, -4, 76};
+    // random.nextBytes(key);
+
+    Files.write(Path.of(resourceSchwaemm + "/key"), key);
+    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
+    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
+    Files.write(Path.of(resourceSchwaemm + "/message"), message);
+
+    byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
+    byte[] messageBack = Schwaemm.decryptAndVerify(javaCipher, associate, key, nonce);
+    Assertions.assertThat(messageBack).isEqualTo(message);
   }
 
   @RepeatedTest(50)
