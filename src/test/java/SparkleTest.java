@@ -1,15 +1,6 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.Scanner;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 
 /**
  * Test java implementation with C implementation of sparkle.
@@ -28,82 +19,66 @@ public final class SparkleTest {
       sparkleCpath += ".exe";
     }
   }
-  private final ProcessCaller caller = new ProcessCaller(resourceSparkle, "sparkleState");
 
-  @AfterAll
-  public static void tearDown() throws IOException {
-    Files.write(Path.of(resourceSparkle + "/sparkleState"), new byte[0]);
+  @RepeatedTest(10)
+  void sparkle256Test()  {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 4, 10);
+    Sparkle.sparkle256(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle256Test() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(4, 10);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle256(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
+  @RepeatedTest(10)
+  void sparkle256SlimTest() {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 4, 7);
+    Sparkle.sparkle256Slim(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle256SlimTest() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(4, 7);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle256Slim(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
+  @RepeatedTest(10)
+  void sparkle384Test() {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 6, 11);
+    Sparkle.sparkle384(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle384Test() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(6, 11);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle384(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
+  @RepeatedTest(10)
+  void sparkle384SlimTest() {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 6, 7);
+    Sparkle.sparkle384Slim(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle384SlimTest() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(6, 7);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle384Slim(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
+  @RepeatedTest(10)
+  void sparkle512Test() {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 8, 12);
+    Sparkle.sparkle512(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle512Test() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(8, 12);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle512(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
+  @RepeatedTest(10)
+  void sparkle512SlimTest() {
+    RandomState states = RandomState.generateRandomState();
+    SparkleLib.sparkleC(states.stateC, 8, 8);
+    Sparkle.sparkle512Slim(states.stateJava);
+    Assertions.assertThat(states.stateC).isEqualTo(states.stateJava);
   }
 
-  @Test
-  void sparkle512SlimTest() throws IOException, InterruptedException {
-    StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(8, 8);
-    int[] cState = caller.callProcess(saa.arguments);
-    Sparkle.sparkle512Slim(saa.state);
-    Assertions.assertThat(cState).isEqualTo(saa.state);
-  }
-
-  /**
-   * The arguments for C sparkle is as follows, on index 0 the absolute path to the C program.
-   * The second last is branches, and last is steps. In between the state should be the same as java.
-   *
-   * @param state java state for sparkle
-   * @param arguments arguments for C sparkle
-   */
-  record StateAndArgument(int[] state, String[] arguments) {
-    static StateAndArgument generateRandomStateAndArguments(int branches, int steps) {
+  record RandomState(int[] stateC, int[] stateJava) {
+    static RandomState generateRandomState() {
       Random random = new Random();
-      int[] state = new int[Sparkle.maxBranches * 2];
-      String[] arguments = new String[Sparkle.maxBranches * 2 + 3];
-      arguments[0] = sparkleCpath;
-      for (int i = 0; i < state.length; i++) {
+      int[] stateC = new int[Sparkle.maxBranches * 2];
+      int[] stateJ = new int[Sparkle.maxBranches * 2];
+      for (int i = 0; i < stateC.length; i++) {
         int randomNumber = random.nextInt(Integer.MAX_VALUE);
-        state[i] = randomNumber;
-        arguments[i + 1] = String.valueOf(randomNumber);
+        stateC[i] = randomNumber;
+        stateJ[i] = randomNumber;
       }
-      arguments[arguments.length - 2] = String.valueOf(branches);
-      arguments[arguments.length - 1] = String.valueOf(steps);
-      return new StateAndArgument(state, arguments);
+      return new RandomState(stateC, stateJ);
     }
   }
 }
