@@ -4,7 +4,7 @@ import org.junit.jupiter.api.RepeatedTest;
 
 public final class SchwaemmTest {
 
-  private final SchwaemmLib schwaemmC = new SchwaemmLib();
+  private final SchwaemmLib schwaemmC = new SchwaemmLib("128128");
 
   @RepeatedTest(50)
   void initializeTest() {

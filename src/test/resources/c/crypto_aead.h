@@ -2,8 +2,8 @@
 // Created by Thomas Luxhøj on 02-11-2022.
 //
 
-#ifndef SPARKLE_IMPLEMENTATIONS_CRYPTO_AEAD_SCHWAEMM128128V2_ADD_ARMV7M_SMALL_CRYPTO_AEAD_H_
-#define SPARKLE_IMPLEMENTATIONS_CRYPTO_AEAD_SCHWAEMM128128V2_ADD_ARMV7M_SMALL_CRYPTO_AEAD_H_
+
+#include <stdint.h>
 
 typedef unsigned char UChar;
 typedef unsigned long long int ULLInt;
@@ -27,4 +27,3 @@ void Finalize(uint32_t *state, const uint8_t *key);
 
 void GenerateTag(uint32_t *state, uint8_t *tag);
 
-#endif // SPARKLE_IMPLEMENTATIONS_CRYPTO_AEAD_SCHWAEMM128128V2_ADD_ARMV7M_SMALL_CRYPTO_AEAD_H_

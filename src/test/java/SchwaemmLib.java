@@ -9,14 +9,14 @@ import org.assertj.core.api.Assertions;
  */
 public final class SchwaemmLib {
 
-  private static final SchwaemmC schwaemmC;
+  private final SchwaemmC schwaemmC;
 
-  static {
+  public SchwaemmLib(String schwaemm) {
     String library;
     if (System.getProperty("os.name").contains("Windows")) {
-      library = "schwaemm/libschwaemm.dll";
+      library = "schwaemm/libschwaemm" + schwaemm + ".dll";
     } else {
-      library = "schwaemm/libschwaemm.so";
+      library = "schwaemm/libschwaemm" + schwaemm + ".so";
     }
     schwaemmC = (SchwaemmC) Native.synchronizedLibrary(Native.load(library, SchwaemmC.class));
   }
