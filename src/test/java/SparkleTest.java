@@ -28,17 +28,17 @@ public final class SparkleTest {
       sparkleCpath += ".exe";
     }
   }
+  private final ProcessCaller caller = new ProcessCaller(resourceSparkle, "sparkleState");
 
   @AfterAll
   public static void tearDown() throws IOException {
     Files.write(Path.of(resourceSparkle + "/sparkleState"), new byte[0]);
   }
 
-
   @Test
   void sparkle256Test() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(4, 10);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle256(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
   }
@@ -46,7 +46,7 @@ public final class SparkleTest {
   @Test
   void sparkle256SlimTest() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(4, 7);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle256Slim(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
   }
@@ -54,7 +54,7 @@ public final class SparkleTest {
   @Test
   void sparkle384Test() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(6, 11);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle384(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
   }
@@ -62,7 +62,7 @@ public final class SparkleTest {
   @Test
   void sparkle384SlimTest() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(6, 7);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle384Slim(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
   }
@@ -70,7 +70,7 @@ public final class SparkleTest {
   @Test
   void sparkle512Test() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(8, 12);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle512(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
   }
@@ -78,37 +78,9 @@ public final class SparkleTest {
   @Test
   void sparkle512SlimTest() throws IOException, InterruptedException {
     StateAndArgument saa = StateAndArgument.generateRandomStateAndArguments(8, 8);
-    int[] cState = callProcess(saa.arguments);
+    int[] cState = caller.callProcess(saa.arguments);
     Sparkle.sparkle512Slim(saa.state);
     Assertions.assertThat(cState).isEqualTo(saa.state);
-  }
-
-  private static int[] callProcess(String[] arguments)
-      throws InterruptedException, IOException {
-    Process process =
-        new ProcessBuilder(Arrays.asList(arguments)).directory(new File(resourceSparkle)).start();
-    int result = process.waitFor();
-    if (result != 0) {
-      printError(process);
-    }
-    File myObj = new File(resourceSparkle + "/sparkleState");
-    Scanner scanner = new Scanner(myObj);
-    int[] cState = new int[Sparkle.maxBranches * 2];
-    int i = 0;
-    while (scanner.hasNextInt()) {
-      cState[i] = scanner.nextInt();
-      i++;
-    }
-    return cState;
-  }
-
-  private static void printError(Process process) throws IOException {
-    BufferedReader errinput = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-    String line = errinput.readLine();
-    while (line != null) {
-      System.out.println(line);
-      line = errinput.readLine();
-    }
   }
 
   /**

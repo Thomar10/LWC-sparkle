@@ -28,33 +28,7 @@ public final class SchwaemmTest {
   }
 
   private final Random random = new Random();
-
-  private static int[] callProcess(String[] arguments) throws InterruptedException, IOException {
-    Process process =
-        new ProcessBuilder(Arrays.asList(arguments)).directory(new File(resourceSchwaemm)).start();
-    int result = process.waitFor();
-    if (result != 0) {
-      printError(process);
-    }
-    File myObj = new File(resourceSchwaemm + "/schwaemmState");
-    Scanner scanner = new Scanner(myObj);
-    int[] cState = new int[Sparkle.maxBranches];
-    int i = 0;
-    while (scanner.hasNextInt()) {
-      cState[i] = scanner.nextInt();
-      i++;
-    }
-    return cState;
-  }
-
-  private static void printError(Process process) throws IOException {
-    BufferedReader errinput = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-    String line = errinput.readLine();
-    while (line != null) {
-      System.out.println(line);
-      line = errinput.readLine();
-    }
-  }
+  private final ProcessCaller caller = new ProcessCaller(resourceSchwaemm, "schwaemmState");
 
   @AfterAll
   public static void tearDown() throws IOException {
@@ -77,23 +51,7 @@ public final class SchwaemmTest {
 
     Files.write(Path.of(resourceSchwaemm + "/key"), key);
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
-    int[] cState = callProcess(new String[]{schwaemmCpath, "initialize"});
-
-    Schwaemm.initialize(state, key, nonce);
-    Assertions.assertThat(cState).isEqualTo(state);
-  }
-
-  @Test
-  void initializeFails() throws IOException, InterruptedException {
-    byte[] nonce = new byte[]{-16, 63, 29, 26, 85, -50, 1, 30, 69, -57, 69, 26, 13, 55, -57, -6};
-
-    byte[] key =
-        new byte[]{-46, -29, -126, -115, 64, -39, -56, 122, 74, -109, -47, 94, 103, -32, 51, 12};
-    int[] state = new int[8];
-
-    Files.write(Path.of(resourceSchwaemm + "/key"), key);
-    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
-    int[] cState = callProcess(new String[]{schwaemmCpath, "initialize"});
+    int[] cState = caller.callProcess(new String[]{schwaemmCpath, "initialize"});
 
     Schwaemm.initialize(state, key, nonce);
     Assertions.assertThat(cState).isEqualTo(state);
@@ -109,7 +67,6 @@ public final class SchwaemmTest {
     random.nextBytes(message);
 
     byte[] nonce = new byte[16];
-
     random.nextBytes(nonce);
 
     byte[] key = new byte[16];
@@ -120,11 +77,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
-    int[] cState =
-        callProcess(
-            new String[]{
-                schwaemmCpath, "finalize", String.valueOf(randomInt), String.valueOf(randomMsg)
-            });
+    int[] cState = caller.callProcess(new String[]{schwaemmCpath, "finalize"});
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
@@ -153,14 +106,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
-    int[] cState =
-        callProcess(
-            new String[]{
-                schwaemmCpath,
-                "generateTag",
-                String.valueOf(randomInt),
-                String.valueOf(randomMsg)
-            });
+    int[] cState = caller.callProcess(new String[]{schwaemmCpath, "generateTag"});
     byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
 
     Schwaemm.initialize(state, key, nonce);
@@ -194,10 +140,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
-    callProcess(
-        new String[]{
-            schwaemmCpath, "fullFunction", String.valueOf(randomInt), String.valueOf(randomMsg)
-        });
+    caller.callProcess(new String[]{schwaemmCpath, "fullFunction"});
     byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
 
     byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
@@ -224,11 +167,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
-    callProcess(
-        new String[]{
-            schwaemmCpath, "encryptAndDecrypt", String.valueOf(randomInt),
-            String.valueOf(randomMsg)
-        });
+    caller.callProcess(new String[]{schwaemmCpath, "encryptAndDecrypt"});
     byte[] messageBack = Files.readAllBytes(Paths.get(resourceSchwaemm + "/messageBack"));
 
     byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
@@ -268,33 +207,6 @@ public final class SchwaemmTest {
     Assertions.assertThat(messageBack).isEqualTo(message);
   }
 
-  @RepeatedTest(1)
-  void encryptTagAndDecryptVerify() throws IOException {
-
-    byte[] associate =
-        new byte[]{93, -84, -88, 28, 82, 90, -4, -123, -108, -50, 86, -103, -107, -13, 126, -35};
-    byte[] message = new byte[]{-108, 68};
-    // random.nextBytes(associate);
-    // random.nextBytes(message);
-
-    byte[] nonce =
-        new byte[]{113, 45, -90, 87, -103, 59, -31, -91, -76, 12, -105, -11, 108, 13, -59, -77};
-    // random.nextBytes(nonce);
-
-    byte[] key =
-        new byte[]{-115, 76, -40, -54, 23, 67, 91, -117, -63, -77, 35, -117, -71, -3, -4, 76};
-    // random.nextBytes(key);
-
-    Files.write(Path.of(resourceSchwaemm + "/key"), key);
-    Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
-    Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
-    Files.write(Path.of(resourceSchwaemm + "/message"), message);
-
-    byte[] javaCipher = Schwaemm.encryptAndTag(message, associate, key, nonce);
-    byte[] messageBack = Schwaemm.decryptAndVerify(javaCipher, associate, key, nonce);
-    Assertions.assertThat(messageBack).isEqualTo(message);
-  }
-
   @RepeatedTest(50)
   void processPlaintext() throws IOException, InterruptedException {
     int randomInt = random.nextInt(32 - 1) + 1;
@@ -315,11 +227,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
     Files.write(Path.of(resourceSchwaemm + "/message"), message);
-    int[] cState =
-        callProcess(
-            new String[]{
-                schwaemmCpath, "encrypt", String.valueOf(randomInt), String.valueOf(randomMsg)
-            });
+    int[] cState = caller.callProcess(new String[]{schwaemmCpath, "encrypt"});
 
     byte[] cipher = Files.readAllBytes(Paths.get(resourceSchwaemm + "/cipher"));
 
@@ -347,8 +255,7 @@ public final class SchwaemmTest {
     Files.write(Path.of(resourceSchwaemm + "/key"), key);
     Files.write(Path.of(resourceSchwaemm + "/nonce"), nonce);
     Files.write(Path.of(resourceSchwaemm + "/associate"), associate);
-    int[] cState =
-        callProcess(new String[]{schwaemmCpath, "associate", String.valueOf(randomInt)});
+    int[] cState = caller.callProcess(new String[]{schwaemmCpath, "associate"});
 
     Schwaemm.initialize(state, key, nonce);
     Schwaemm.associateData(state, associate);
