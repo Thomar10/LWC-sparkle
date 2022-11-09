@@ -111,7 +111,7 @@ public final class SchwaemmLib {
     int res = schwaemmC.crypto_aead_decrypt(m, memory, null, c, clen, ad, adlen, npub, k);
     Assertions.assertThat(memory.getLong(0)).isEqualTo(m.length);
     if (res != 0) {
-      throw new RuntimeException("Encrypting and tagging went wrong");
+      throw new RuntimeException("Verification went wrong on C side");
     }
   }
 
