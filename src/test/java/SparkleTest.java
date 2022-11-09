@@ -7,19 +7,6 @@ import org.junit.jupiter.api.RepeatedTest;
  */
 public final class SparkleTest {
 
-  private static final String resourceSparkle =
-      System.getProperty("user.dir") + "/src/test/resources/sparkle";
-
-  private static String sparkleCpath = SparkleTest.class.getResource("/sparkle/sparkleC")
-      .getPath();
-
-  static {
-    String operatingSystem = System.getProperty("os.name");
-    if (operatingSystem.contains("Windows")) {
-      sparkleCpath += ".exe";
-    }
-  }
-
   @RepeatedTest(10)
   void sparkle256Test()  {
     RandomState states = RandomState.generateRandomState();

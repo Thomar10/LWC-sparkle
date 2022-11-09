@@ -10,7 +10,7 @@ public final class Schwaemm {
   private static final int SPARKLE_RATE = 128;
   private static final int SPARKLE_CAPACITY = 128;
 
-  private static final int TAG_BYTES = SCHWAEMM_TAG_LEN / 8; // 16
+  public static final int TAG_BYTES = SCHWAEMM_TAG_LEN / 8; // 16
   private static final int STATE_WORDS = SPARKLE_STATE / 32; // 8
   private static final int RATE_BYTES = SPARKLE_RATE / 8; // 16
   private static final int RATE_WORDS = SPARKLE_RATE / 32; // 4
@@ -306,16 +306,6 @@ public final class Schwaemm {
       elements = intToBytesSafe(ints[i], buffer, j * 4 + bufferStartIndex, elements);
     }
   }
-
-  /*
-  private static byte[] populateByteArrayFromInts(int[] ints, int length, int startIndex) {
-    byte[] result = new byte[length];
-    for (int i = startIndex, j = 0; i < ints.length; i++, j++) {
-      intToBytes(ints[i], result, j * 4);
-    }
-    return result;
-  }
-  */
 
   private static int[] createIntArrayFromBytes(byte[] bytes, int length) {
     int[] result = new int[length];
