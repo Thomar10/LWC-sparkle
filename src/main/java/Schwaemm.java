@@ -77,23 +77,15 @@ public final class Schwaemm {
 
   private static void copyLengthBytesFromStateToBuffer(int[] buffer, int[] state, int length) {
     int rest = RATE_BYTES - length;
-    int unevenBytesInStart = rest % 4;
-    System.out.println("rest " + rest);
     byte[] bytesCreated = new byte[4];
     int index = length / 4;
-    System.out.println("index " + index);
-
     intToBytes(state[index], bytesCreated, 0);
-    if (index == 0) {
-      buffer[index] = getIntFromBytes(length, buffer[index], bytesCreated);
-    } else {
-      buffer[index] = getIntFromBytes(unevenBytesInStart, buffer[index], bytesCreated);
-    }
-
+    // First copy uneven bytes into buffer[index]. If length % 4 = 0 this is the same as
+    // copying buffer[index] = state[index] for all indexes.
+    buffer[index] = getIntFromBytes(length % 4, buffer[index], bytesCreated);
     for (; rest > 4; rest -= 4, index++) {
       buffer[index + 1] = state[index + 1];
     }
-    System.out.println("buffer before " + Arrays.toString(buffer));
   }
 
   private static int getIntFromBytes(int length, int bufferElement, byte[] bytes) {
@@ -111,22 +103,9 @@ public final class Schwaemm {
           | ((((int) bytes[2]) & BYTE_MASK) << 16)
           | ((((int) bytes[3]) & BYTE_MASK) << 24);
     }
-    /*System.out.println(Integer.toBinaryString(bufferElement
-        | ((((int) bytes[1]) & BYTE_MASK) << 8)
-        | ((((int) bytes[2]) & BYTE_MASK) << 16)
-        | ((((int) bytes[3]) & BYTE_MASK) << 24)));
-    System.out.println(Integer.toBinaryString(537295657));
-    System.out.println(Integer.toBinaryString(bytes[0]& BYTE_MASK));
-    System.out.println(Integer.toBinaryString(bytes[1]& BYTE_MASK));
-    System.out.println(Integer.toBinaryString(bytes[2]& BYTE_MASK));
-    System.out.println(Integer.toBinaryString(bytes[3]& BYTE_MASK));
-
-     */
     return bufferElement
-        | ((((int) bytes[1]) & BYTE_MASK) << 8)
-        | ((((int) bytes[2]) & BYTE_MASK) << 16)
         | ((((int) bytes[3]) & BYTE_MASK) << 24);
-    //return bufferElement | ((((int) bytes[3]) & BYTE_MASK) << 24);
+
   }
 
   private static void rhoWhiDecLast(
@@ -134,21 +113,10 @@ public final class Schwaemm {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
 
-    System.out.println();
-    for (int number : buffer) {
-      System.out.println(number);
-    }
-    System.out.println(length);
     if (length < RATE_BYTES) {
       copyLengthBytesFromStateToBuffer(buffer, state, length);
       buffer[length / 4] ^= 128 << (8 * (length % 4));
     }
-
-    System.out.println();
-    for (int number : buffer) {
-      System.out.println(number);
-    }
-    System.out.println();
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[i];
@@ -158,7 +126,6 @@ public final class Schwaemm {
       buffer[i] ^= tmp1;
       buffer[j] ^= tmp2;
     }
-
     populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
@@ -275,7 +242,7 @@ public final class Schwaemm {
    * Absorbs the data into the state.
    *
    * @param state state
-   * @param data data to be absorbed
+   * @param data  data to be absorbed
    */
   static void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
