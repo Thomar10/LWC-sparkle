@@ -2,9 +2,11 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 
-public final class SchwaemmTest {
+public final class Schwaemm128128Test {
 
+  private static final int TAG_BYTES = 16;
   private final SchwaemmLib schwaemmC = new SchwaemmLib("128128");
+  private final Schwaemm schwaemmJava = new Schwaemm(Schwaemm.SCHWAEMM128128);
 
   @RepeatedTest(50)
   void initializeTest() {
@@ -12,7 +14,7 @@ public final class SchwaemmTest {
     int[] stateJ = new int[8];
     PreparedTest data = PreparedTest.prepareTest();
     schwaemmC.initialize(stateC, data.key, data.nonce);
-    Schwaemm.initialize(stateJ, data.key, data.nonce);
+    schwaemmJava.initialize(stateJ, data.key, data.nonce);
     Assertions.assertThat(stateJ).isEqualTo(stateC);
   }
 
@@ -24,7 +26,7 @@ public final class SchwaemmTest {
 
     schwaemmC.finalize(stateC, data.key);
 
-    Schwaemm.finalize(stateJ, data.key);
+    schwaemmJava.finalize(stateJ, data.key);
     Assertions.assertThat(stateC).isEqualTo(stateJ);
   }
 
@@ -33,14 +35,14 @@ public final class SchwaemmTest {
     PreparedTest data = PreparedTest.prepareTest();
     int[] stateC = new int[8];
     int[] stateJ = new int[8];
-    byte[] cipher = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.stagesWithFinalize(stateC, data.key, data.nonce, data.associate,
         data.associate.length, data.message, data.message.length, cipher);
 
-    Schwaemm.initialize(stateJ, data.key, data.nonce);
-    Schwaemm.associateData(stateJ, data.associate);
-    Schwaemm.encrypt(stateJ, data.message);
-    Schwaemm.finalize(stateJ, data.key);
+    schwaemmJava.initialize(stateJ, data.key, data.nonce);
+    schwaemmJava.associateData(stateJ, data.associate);
+    schwaemmJava.encrypt(stateJ, data.message);
+    schwaemmJava.finalize(stateJ, data.key);
     Assertions.assertThat(stateC).isEqualTo(stateJ);
   }
 
@@ -50,9 +52,9 @@ public final class SchwaemmTest {
     int[] cState = data.stateC;
     int[] state = data.stateJ;
 
-    byte[] tag = new byte[data.message.length + Schwaemm.TAG_BYTES];
-    Schwaemm.generateTag(state, tag, data.message.length);
-    byte[] cTag = new byte[Schwaemm.TAG_BYTES];
+    byte[] tag = new byte[data.message.length + TAG_BYTES];
+    schwaemmJava.generateTag(state, tag, data.message.length);
+    byte[] cTag = new byte[TAG_BYTES];
     schwaemmC.generateTag(cState, cTag);
 
     Assertions.assertThat(cState).isEqualTo(state);
@@ -66,15 +68,15 @@ public final class SchwaemmTest {
   void stageWithGenerateTag() {
     PreparedTest data = PreparedTest.prepareTest();
     int[] cState = new int[8];
-    byte[] cCipherWithTag = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    byte[] cCipherWithTag = new byte[data.message.length + TAG_BYTES];
     schwaemmC.stagesWithGenerateTag(cState, data.key, data.nonce, data.associate,
         data.associate.length, data.message, data.message.length, cCipherWithTag);
     int[] state = new int[8];
-    Schwaemm.initialize(state, data.key, data.nonce);
-    Schwaemm.associateData(state, data.associate);
-    byte[] javaCipher = Schwaemm.encrypt(state, data.message);
-    Schwaemm.finalize(state, data.key);
-    Schwaemm.generateTag(state, javaCipher, data.message.length);
+    schwaemmJava.initialize(state, data.key, data.nonce);
+    schwaemmJava.associateData(state, data.associate);
+    byte[] javaCipher = schwaemmJava.encrypt(state, data.message);
+    schwaemmJava.finalize(state, data.key);
+    schwaemmJava.generateTag(state, javaCipher, data.message.length);
 
     Assertions.assertThat(cState).isEqualTo(state);
     Assertions.assertThat(cCipherWithTag).isEqualTo(javaCipher);
@@ -83,10 +85,11 @@ public final class SchwaemmTest {
   @RepeatedTest(50)
   void checkSchwaemmEncrypt() {
     PreparedTest data = PreparedTest.prepareTest();
-    byte[] cipher = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.encryptAndTag(cipher, data.message, data.message.length,
         data.associate, data.associate.length, data.nonce, data.key);
-    byte[] javaCipher = Schwaemm.encryptAndTag(data.message, data.associate, data.key, data.nonce);
+    byte[] javaCipher = schwaemmJava.encryptAndTag(data.message, data.associate, data.key,
+        data.nonce);
 
     Assertions.assertThat(cipher).isEqualTo(javaCipher);
   }
@@ -95,15 +98,16 @@ public final class SchwaemmTest {
   void encryptAndDecryptC() {
     PreparedTest data = PreparedTest.prepareTest();
 
-    byte[] cipher = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.encryptAndTag(cipher, data.message, data.message.length,
         data.associate, data.associate.length, data.nonce, data.key);
     byte[] messageBack = new byte[data.message.length];
     schwaemmC.decryptAndVerify(messageBack, cipher, cipher.length, data.associate,
         data.associate.length, data.nonce, data.key);
 
-    byte[] javaCipher = Schwaemm.encryptAndTag(data.message, data.associate, data.key, data.nonce);
-    byte[] messageJava = Schwaemm.decryptAndVerify(javaCipher, data.associate, data.key,
+    byte[] javaCipher = schwaemmJava.encryptAndTag(data.message, data.associate, data.key,
+        data.nonce);
+    byte[] messageJava = schwaemmJava.decryptAndVerify(javaCipher, data.associate, data.key,
         data.nonce);
 
     Assertions.assertThat(data.message).isEqualTo(messageBack);
@@ -114,17 +118,17 @@ public final class SchwaemmTest {
   void encryptAndDecrypt() {
     PreparedTest data = PreparedTest.prepareTest();
     int[] state = new int[8];
-    Schwaemm.initialize(state, data.key, data.nonce);
-    Schwaemm.associateData(state, data.associate);
-    byte[] cipher = Schwaemm.encrypt(state, data.message);
-    Schwaemm.finalize(state, data.key);
-    byte[] javaCipher = Schwaemm.generateTag(state, cipher, data.message.length);
+    schwaemmJava.initialize(state, data.key, data.nonce);
+    schwaemmJava.associateData(state, data.associate);
+    byte[] cipher = schwaemmJava.encrypt(state, data.message);
+    schwaemmJava.finalize(state, data.key);
+    byte[] javaCipher = schwaemmJava.generateTag(state, cipher, data.message.length);
 
     int[] decryptState = new int[8];
-    Schwaemm.initialize(decryptState, data.key, data.nonce);
-    Schwaemm.associateData(decryptState, data.associate);
+    schwaemmJava.initialize(decryptState, data.key, data.nonce);
+    schwaemmJava.associateData(decryptState, data.associate);
     byte[] messageBack = new byte[data.message.length];
-    Schwaemm.decrypt(decryptState, messageBack, javaCipher);
+    schwaemmJava.decrypt(decryptState, messageBack, javaCipher);
     Assertions.assertThat(messageBack).isEqualTo(data.message);
   }
 
@@ -134,8 +138,8 @@ public final class SchwaemmTest {
     int[] state = data.stateJ;
     int[] cState = data.stateC;
 
-    byte[] javaCipher = Schwaemm.encrypt(state, data.message);
-    byte[] cipher = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    byte[] javaCipher = schwaemmJava.encrypt(state, data.message);
+    byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.ProcessPlainText(cState, cipher, data.message, data.message.length);
 
     Assertions.assertThat(cState).isEqualTo(state);
@@ -148,10 +152,10 @@ public final class SchwaemmTest {
     int[] state = new int[8];
     int[] cState = new int[8];
 
-    Schwaemm.initialize(state, data.key, data.nonce);
-    Schwaemm.associateData(state, data.associate);
-    byte[] javaCipher = Schwaemm.encrypt(state, data.message);
-    byte[] cipher = new byte[data.message.length + Schwaemm.TAG_BYTES];
+    schwaemmJava.initialize(state, data.key, data.nonce);
+    schwaemmJava.associateData(state, data.associate);
+    byte[] javaCipher = schwaemmJava.encrypt(state, data.message);
+    byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.stagesWithProcessPlainText(cState, data.key, data.nonce, data.associate,
         data.associate.length, data.message, data.message.length, cipher);
 
@@ -167,7 +171,7 @@ public final class SchwaemmTest {
     int[] cState = data.stateC;
     schwaemmC.processAssocData(cState, data.associate, data.associate.length);
 
-    Schwaemm.associateData(state, data.associate);
+    schwaemmJava.associateData(state, data.associate);
     Assertions.assertThat(cState).isEqualTo(state);
   }
 
@@ -179,9 +183,34 @@ public final class SchwaemmTest {
     schwaemmC.stagesWithProcessAssocData(cState, data.key, data.nonce, data.associate,
         data.associate.length);
 
-    Schwaemm.initialize(state, data.key, data.nonce);
-    Schwaemm.associateData(state, data.associate);
+    schwaemmJava.initialize(state, data.key, data.nonce);
+    schwaemmJava.associateData(state, data.associate);
     Assertions.assertThat(cState).isEqualTo(state);
+  }
+
+  @RepeatedTest(50)
+  void verifyTagFailsOnRandomInput() {
+    PreparedTest data = PreparedTest.prepareTest();
+    byte[] randomCipher = new byte[TAG_BYTES];
+    new Random().nextBytes(randomCipher);
+    int res = schwaemmC.verifyTag(data.stateJ, randomCipher);
+    Assertions.assertThat(res).isEqualTo(-1);
+    // TODO REFACTOR ALL HARDCODED STATE LENGTHS IN TESTS
+    // 4 = 8 / 2 (by the state)
+    Assertions.assertThatThrownBy(() -> schwaemmJava.verifyTag(data.stateJ,
+            Schwaemm.createIntArrayFromBytes(randomCipher, 4))).isInstanceOf(RuntimeException.class)
+        .hasMessage("Could not verify tag!");
+  }
+
+  @RepeatedTest(50)
+  void processCipherText() {
+    PreparedTest data = PreparedTest.prepareTest();
+    byte[] randomCipher = new byte[data.message.length + TAG_BYTES];
+    new Random().nextBytes(randomCipher);
+
+    schwaemmJava.decrypt(data.stateJ, data.message, randomCipher);
+
+    schwaemmC.ProcessCipherText(data.stateC, randomCipher, data.message, data.message.length);
   }
 
   private record PreparedTest(byte[] key, byte[] nonce, byte[] associate, byte[] message,

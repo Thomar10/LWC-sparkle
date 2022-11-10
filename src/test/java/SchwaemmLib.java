@@ -1,7 +1,6 @@
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
 import org.assertj.core.api.Assertions;
 
 /**
@@ -11,14 +10,17 @@ public final class SchwaemmLib {
 
   private final SchwaemmC schwaemmC;
 
-  public SchwaemmLib(String schwaemm) {
+  private final int TAG_BYTES;
+
+  public SchwaemmLib(String type) {
     String library;
     if (System.getProperty("os.name").contains("Windows")) {
-      library = "schwaemm/libschwaemm" + schwaemm + ".dll";
+      library = "schwaemm/libschwaemm" + type + ".dll";
     } else {
-      library = "schwaemm/libschwaemm" + schwaemm + ".so";
+      library = "schwaemm/libschwaemm" + type + ".so";
     }
     schwaemmC = (SchwaemmC) Native.synchronizedLibrary(Native.load(library, SchwaemmC.class));
+    TAG_BYTES = Integer.parseInt(type.substring(3, 6)) / 8;
   }
 
   public void initialize(int[] state, final byte[] key, final byte[] nonce) {
@@ -71,9 +73,9 @@ public final class SchwaemmLib {
       schwaemmC.ProcessPlainText(state, out, msgIn, msgInLen);
     }
     schwaemmC.Finalize(state, key);
-    byte[] tag = new byte[Schwaemm.TAG_BYTES];
+    byte[] tag = new byte[TAG_BYTES];
     schwaemmC.GenerateTag(state, tag);
-    System.arraycopy(tag, 0, out, msgInLen, Schwaemm.TAG_BYTES);
+    System.arraycopy(tag, 0, out, msgInLen, TAG_BYTES);
   }
 
   public void stagesWithProcessAssocData(int[] state, final byte[] key, final byte[] nonce,
