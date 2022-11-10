@@ -184,7 +184,8 @@ public final class Schwaemm {
     }
   }
 
-  public byte[] encryptAndTag(byte[] message, byte[] cipher, byte[] assoData, byte[] key, byte[] nonce) {
+  public void encryptAndTag(byte[] message, byte[] cipher, byte[] assoData, byte[] key,
+      byte[] nonce) {
     int[] state = new int[STATE_WORDS];
     initialize(state, key, nonce);
     if (assoData.length > 0) {
@@ -196,12 +197,11 @@ public final class Schwaemm {
     int[] intKey = ConversionUtil.createIntArrayFromBytes(key, KEY_BYTES / 4);
 
     finalize(state, intKey);
-    return generateTag(state, cipher, message.length);
+    generateTag(state, cipher, message.length);
   }
 
-  byte[] generateTag(int[] state, byte[] cipher, int messageLength) {
+  void generateTag(int[] state, byte[] cipher, int messageLength) {
     ConversionUtil.populateByteArrayFromInts(state, cipher, RATE_WORDS, TAG_BYTES, messageLength);
-    return cipher;
   }
 
   void finalize(int[] state, byte[] key) {

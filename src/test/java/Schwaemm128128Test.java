@@ -88,32 +88,31 @@ public final class Schwaemm128128Test {
   @RepeatedTest(50)
   void checkSchwaemmEncrypt() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
-    byte[] cipher = new byte[data.message().length + TAG_BYTES];
-    schwaemmC.encryptAndTag(cipher, data.message(), data.message().length,
+    schwaemmC.encryptAndTag(data.cipherC(), data.message(), data.message().length,
         data.associate(), data.associate().length, data.nonce(), data.key());
-    byte[] javaCipher = schwaemmJava.encryptAndTag(data.message(), data.cipherJava(),
+    schwaemmJava.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),
         data.key(),
         data.nonce());
 
-    Assertions.assertThat(cipher).isEqualTo(javaCipher);
+    Assertions.assertThat(data.cipherC()).isEqualTo(data.cipherJava());
   }
 
   @RepeatedTest(50)
   void encryptAndDecryptC() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
-    byte[] cipher = new byte[data.message().length + TAG_BYTES];
-    schwaemmC.encryptAndTag(cipher, data.message(), data.message().length,
+    schwaemmC.encryptAndTag(data.cipherC(), data.message(), data.message().length,
         data.associate(), data.associate().length, data.nonce(), data.key());
     byte[] messageBack = new byte[data.message().length];
-    schwaemmC.decryptAndVerify(messageBack, cipher, cipher.length, data.associate(),
+    schwaemmC.decryptAndVerify(messageBack, data.cipherC(), data.cipherC().length, data.associate(),
         data.associate().length, data.nonce(), data.key());
 
-    byte[] javaCipher = schwaemmJava.encryptAndTag(data.message(), data.cipherJava(),
+    schwaemmJava.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),
         data.key(),
         data.nonce());
-    byte[] messageJava = schwaemmJava.decryptAndVerify(javaCipher, data.associate(), data.key(),
+    byte[] messageJava = schwaemmJava.decryptAndVerify(data.cipherJava(), data.associate(),
+        data.key(),
         data.nonce());
 
     Assertions.assertThat(data.message()).isEqualTo(messageBack);

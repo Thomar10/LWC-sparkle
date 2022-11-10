@@ -8,7 +8,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   private static final Random random = new Random();
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
-    // TODO THIS CAN PROB BE DIFF ALSO
+    // Tests in C only goes up to 32 bits.
     int randomInt = random.nextInt(32 - minLength) + minLength;
     int randomMsg = random.nextInt(32 - minLength) + minLength;
     byte[] associate = new byte[randomInt];
@@ -32,7 +32,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   }
 
   public static SchwaemmHelper prepareTest(SchwaemmType type) {
-   return prepareTest(type, 0);
+    return prepareTest(type, 0);
   }
 }
 
