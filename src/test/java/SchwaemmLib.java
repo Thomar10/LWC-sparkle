@@ -12,15 +12,15 @@ public final class SchwaemmLib {
 
   private final int TAG_BYTES;
 
-  public SchwaemmLib(String type) {
+  public SchwaemmLib(SchwaemmType type) {
     String library;
     if (System.getProperty("os.name").contains("Windows")) {
-      library = "schwaemm/libschwaemm" + type + ".dll";
+      library = "schwaemm/libschwaemm" + type.getType() + ".dll";
     } else {
-      library = "schwaemm/libschwaemm" + type + ".so";
+      library = "schwaemm/libschwaemm" + type.getType() + ".so";
     }
     schwaemmC = (SchwaemmC) Native.synchronizedLibrary(Native.load(library, SchwaemmC.class));
-    TAG_BYTES = Integer.parseInt(type.substring(3, 6)) / 8;
+    TAG_BYTES = type.getTagBytes();
   }
 
   public void initialize(int[] state, final byte[] key, final byte[] nonce) {

@@ -4,14 +4,15 @@ import org.junit.jupiter.api.RepeatedTest;
 
 public final class Schwaemm128128Test {
 
-  private static final int TAG_BYTES = 16;
-  private final SchwaemmLib schwaemmC = new SchwaemmLib("128128");
-  private final Schwaemm schwaemmJava = new Schwaemm(Schwaemm.SCHWAEMM128128);
+  private static final int TAG_BYTES = SchwaemmType.S128128.getTagBytes();
+  private static final int STATE_WORDS = SchwaemmType.S128128.getStateSize();
+  private final SchwaemmLib schwaemmC = new SchwaemmLib(SchwaemmType.S128128);
+  private final Schwaemm schwaemmJava = new Schwaemm(SchwaemmType.S128128);
 
   @RepeatedTest(50)
   void initializeTest() {
-    int[] stateC = new int[8];
-    int[] stateJ = new int[8];
+    int[] stateC = new int[STATE_WORDS];
+    int[] stateJ = new int[STATE_WORDS];
     PreparedTest data = PreparedTest.prepareTest();
     schwaemmC.initialize(stateC, data.key, data.nonce);
     schwaemmJava.initialize(stateJ, data.key, data.nonce);
@@ -33,8 +34,8 @@ public final class Schwaemm128128Test {
   @RepeatedTest(50)
   void stageWithFinalizeCall() {
     PreparedTest data = PreparedTest.prepareTest();
-    int[] stateC = new int[8];
-    int[] stateJ = new int[8];
+    int[] stateC = new int[STATE_WORDS];
+    int[] stateJ = new int[STATE_WORDS];
     byte[] cipher = new byte[data.message.length + TAG_BYTES];
     schwaemmC.stagesWithFinalize(stateC, data.key, data.nonce, data.associate,
         data.associate.length, data.message, data.message.length, cipher);
@@ -67,11 +68,11 @@ public final class Schwaemm128128Test {
   @RepeatedTest(50)
   void stageWithGenerateTag() {
     PreparedTest data = PreparedTest.prepareTest();
-    int[] cState = new int[8];
+    int[] cState = new int[STATE_WORDS];
     byte[] cCipherWithTag = new byte[data.message.length + TAG_BYTES];
     schwaemmC.stagesWithGenerateTag(cState, data.key, data.nonce, data.associate,
         data.associate.length, data.message, data.message.length, cCipherWithTag);
-    int[] state = new int[8];
+    int[] state = new int[STATE_WORDS];
     schwaemmJava.initialize(state, data.key, data.nonce);
     schwaemmJava.associateData(state, data.associate);
     byte[] javaCipher = schwaemmJava.encrypt(state, data.message);
@@ -117,14 +118,14 @@ public final class Schwaemm128128Test {
   @RepeatedTest(50)
   void encryptAndDecrypt() {
     PreparedTest data = PreparedTest.prepareTest();
-    int[] state = new int[8];
+    int[] state = new int[STATE_WORDS];
     schwaemmJava.initialize(state, data.key, data.nonce);
     schwaemmJava.associateData(state, data.associate);
     byte[] cipher = schwaemmJava.encrypt(state, data.message);
     schwaemmJava.finalize(state, data.key);
     byte[] javaCipher = schwaemmJava.generateTag(state, cipher, data.message.length);
 
-    int[] decryptState = new int[8];
+    int[] decryptState = new int[STATE_WORDS];
     schwaemmJava.initialize(decryptState, data.key, data.nonce);
     schwaemmJava.associateData(decryptState, data.associate);
     byte[] messageBack = new byte[data.message.length];
@@ -149,8 +150,8 @@ public final class Schwaemm128128Test {
   @RepeatedTest(50)
   void stagesWithProcessPlaintext() {
     PreparedTest data = PreparedTest.prepareTest();
-    int[] state = new int[8];
-    int[] cState = new int[8];
+    int[] state = new int[STATE_WORDS];
+    int[] cState = new int[STATE_WORDS];
 
     schwaemmJava.initialize(state, data.key, data.nonce);
     schwaemmJava.associateData(state, data.associate);
@@ -178,8 +179,8 @@ public final class Schwaemm128128Test {
   @RepeatedTest(20)
   void stageWithProcessAssociateData() {
     PreparedTest data = PreparedTest.prepareTest();
-    int[] state = new int[8];
-    int[] cState = new int[8];
+    int[] state = new int[STATE_WORDS];
+    int[] cState = new int[STATE_WORDS];
     schwaemmC.stagesWithProcessAssocData(cState, data.key, data.nonce, data.associate,
         data.associate.length);
 

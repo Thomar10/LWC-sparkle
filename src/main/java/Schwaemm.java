@@ -3,11 +3,6 @@ import java.util.function.Consumer;
 
 public final class Schwaemm {
 
-  public static final String SCHWAEMM128128 = "128128";
-  public static final String SCHWAEMM192192 = "192192";
-  public static final String SCHWAEMM256128 = "256128";
-  public static final String SCHWAEMM256256 = "256256";
-
   private static final int BYTE_MASK = (1 << 8) - 1;
   private final int TAG_BYTES;
   private final Consumer<int[]> sparkleSlim;
@@ -24,10 +19,10 @@ public final class Schwaemm {
   private final int CONST_M3;
   private final int CAP_WORDS;
 
-  private final boolean isSame;
+  private final SchwaemmType type;
 
 
-  public Schwaemm(String type) {
+  public Schwaemm(SchwaemmType type) {
     int SCHWAEMM_KEY_LEN;
     int SCHWAEMM_NONCE_LEN;
     int SCHWAEMM_TAG_LEN;
@@ -35,49 +30,49 @@ public final class Schwaemm {
     int SPARKLE_RATE;
     int SPARKLE_CAPACITY;
     switch (type) {
-      case SCHWAEMM128128 -> {
+      case S128128 -> {
         SCHWAEMM_KEY_LEN = 128;
         SCHWAEMM_NONCE_LEN = 128;
         SCHWAEMM_TAG_LEN = 128;
         SPARKLE_STATE = 256;
         SPARKLE_RATE = 128;
         SPARKLE_CAPACITY = 128;
-        sparkleSlim = Sparkle::sparkle256Slim;
-        sparkle = Sparkle::sparkle256;
-        isSame = true;
+        this.sparkleSlim = Sparkle::sparkle256Slim;
+        this.sparkle = Sparkle::sparkle256;
+        this.type = type;
       }
-      case SCHWAEMM192192 -> {
+      case S192192 -> {
         SCHWAEMM_KEY_LEN = 192;
         SCHWAEMM_NONCE_LEN = 192;
         SCHWAEMM_TAG_LEN = 192;
         SPARKLE_STATE = 384;
         SPARKLE_RATE = 192;
         SPARKLE_CAPACITY = 192;
-        sparkleSlim = Sparkle::sparkle384Slim;
-        sparkle = Sparkle::sparkle384;
-        isSame = true;
+        this.sparkleSlim = Sparkle::sparkle384Slim;
+        this.sparkle = Sparkle::sparkle384;
+        this.type = type;
       }
-      case SCHWAEMM256128 -> {
+      case S256128 -> {
         SCHWAEMM_KEY_LEN = 128;
         SCHWAEMM_NONCE_LEN = 256;
         SCHWAEMM_TAG_LEN = 128;
         SPARKLE_STATE = 384;
         SPARKLE_RATE = 256;
         SPARKLE_CAPACITY = 128;
-        sparkleSlim = Sparkle::sparkle384Slim;
-        sparkle = Sparkle::sparkle384;
-        isSame = false;
+        this.sparkleSlim = Sparkle::sparkle384Slim;
+        this.sparkle = Sparkle::sparkle384;
+        this.type = type;
       }
-      case SCHWAEMM256256 -> {
+      case S256256 -> {
         SCHWAEMM_KEY_LEN = 256;
         SCHWAEMM_NONCE_LEN = 256;
         SCHWAEMM_TAG_LEN = 256;
         SPARKLE_STATE = 512;
         SPARKLE_RATE = 256;
         SPARKLE_CAPACITY = 256;
-        sparkleSlim = Sparkle::sparkle512Slim;
-        sparkle = Sparkle::sparkle512;
-        isSame = true;
+        this.sparkleSlim = Sparkle::sparkle512Slim;
+        this.sparkle = Sparkle::sparkle512;
+        this.type = type;
       }
       default -> throw new RuntimeException("Unknown Schwaemm configuration!");
     }
@@ -189,12 +184,10 @@ public final class Schwaemm {
     decrypt(state, message, cipher);
     finalize(state, key);
 
-    // TODO SHOULD BE MAKE BETTER
-    int tagLength = isSame ? state.length / 2 : 4;
     verifyTag(
         state,
         createIntArrayFromBytes(Arrays.copyOfRange(cipher, cipherTextLength, cipher.length),
-            tagLength));
+            type.getVerifyTagLength()));
     return message;
   }
 
