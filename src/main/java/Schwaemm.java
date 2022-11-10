@@ -98,8 +98,9 @@ public final class Schwaemm {
     if (assoData.length > 0) {
       associateData(state, assoData);
     }
-
-    decrypt(state, message, cipher);
+    if (cipherTextLength > 0) {
+      decrypt(state, message, cipher);
+    }
     finalize(state, key);
 
     verifyTag(
@@ -183,18 +184,19 @@ public final class Schwaemm {
     }
   }
 
-  // TODO Make so it message can have length 0.
-  public byte[] encryptAndTag(byte[] message, byte[] assoData, byte[] key, byte[] nonce) {
+  public byte[] encryptAndTag(byte[] message, byte[] cipher, byte[] assoData, byte[] key, byte[] nonce) {
     int[] state = new int[STATE_WORDS];
     initialize(state, key, nonce);
     if (assoData.length > 0) {
       associateData(state, assoData);
     }
-    byte[] cipherText = encrypt(state, message);
+    if (message.length > 0) {
+      encrypt(state, message, cipher);
+    }
     int[] intKey = ConversionUtil.createIntArrayFromBytes(key, KEY_BYTES / 4);
 
     finalize(state, intKey);
-    return generateTag(state, cipherText, message.length);
+    return generateTag(state, cipher, message.length);
   }
 
   byte[] generateTag(int[] state, byte[] cipher, int messageLength) {
@@ -213,8 +215,7 @@ public final class Schwaemm {
     }
   }
 
-  byte[] encrypt(int[] state, byte[] message) {
-    byte[] cipherBytes = new byte[message.length + TAG_BYTES];
+  void encrypt(int[] state, byte[] message, byte[] cipherBytes) {
     int msgLength = message.length;
     int[] msgAsInt = ConversionUtil.createIntArrayFromBytes(message, (message.length - 1) / 4 + 1);
     int index = 0;
@@ -238,7 +239,6 @@ public final class Schwaemm {
         cipherBytes,
         cipherIndex);
     sparkle.accept(state);
-    return cipherBytes;
   }
 
   private void rhoWhiEnc(int[] state, int[] message, int[] cipher, int cipherIndex) {

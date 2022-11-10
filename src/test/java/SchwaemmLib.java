@@ -117,7 +117,6 @@ public final class SchwaemmLib {
     }
   }
 
-
   interface SchwaemmC extends Library {
 
     void Initialize(int[] state, final byte[] key, final byte[] nonce);

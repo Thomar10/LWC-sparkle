@@ -41,4 +41,38 @@ public enum SchwaemmType {
   public String getType() {
     return type;
   }
+
+  public int getNonceSize() {
+    switch (this.type) {
+      case "128128" -> {
+        return 16;
+      }
+      case "192192" -> {
+        return 24;
+      }
+      case "256128", "256256" -> {
+        return 32;
+      }
+      default -> {
+        return -1;
+      }
+    }
+  }
+
+  public int getKeySize() {
+    switch (this.type) {
+      case "128128", "256128" -> {
+        return 16;
+      }
+      case "192192" -> {
+        return 24;
+      }
+      case "256256" -> {
+        return 32;
+      }
+      default -> {
+        return -1;
+      }
+    }
+  }
 }
