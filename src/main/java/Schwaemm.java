@@ -3,7 +3,6 @@ import java.util.function.Consumer;
 
 public final class Schwaemm {
 
-  private static final int BYTE_MASK = (1 << 8) - 1;
   private final int TAG_BYTES;
   private final Consumer<int[]> sparkleSlim;
   private final Consumer<int[]> sparkle;
@@ -91,87 +90,6 @@ public final class Schwaemm {
     CONST_M3 = (3 ^ (1 << CAP_BRANS)) << 24;
   }
 
-  private static int getIntFromBytes(int length, int bufferElement, byte[] bytes) {
-    if (length == 0) {
-      return bytesToIntSafe(bytes, 0);
-    }
-    if (length == 1) {
-      return bufferElement
-          | ((((int) bytes[1]) & BYTE_MASK) << 8)
-          | ((((int) bytes[2]) & BYTE_MASK) << 16)
-          | ((((int) bytes[3]) & BYTE_MASK) << 24);
-    }
-    if (length == 2) {
-      return bufferElement
-          | ((((int) bytes[2]) & BYTE_MASK) << 16)
-          | ((((int) bytes[3]) & BYTE_MASK) << 24);
-    }
-    return bufferElement
-        | ((((int) bytes[3]) & BYTE_MASK) << 24);
-
-  }
-
-  private static void populateByteArrayFromInts(
-      int[] ints, byte[] buffer, int startIndex, int elements, int bufferStartIndex) {
-    for (int i = startIndex, j = 0; i < ints.length && elements > 0; i++, j++) {
-      elements = intToBytesSafe(ints[i], buffer, j * 4 + bufferStartIndex, elements);
-    }
-  }
-
-  static int[] createIntArrayFromBytes(byte[] bytes, int length) {
-    int[] result = new int[length];
-    for (int i = 0; i < result.length; i++) {
-      result[i] = bytesToIntSafe(bytes, i * 4);
-    }
-    return result;
-  }
-
-  private static int intToBytesSafe(int value, byte[] buffer, int offset, int remainingBytes) {
-    if (remainingBytes >= 4) {
-      intToBytes(value, buffer, offset);
-      return remainingBytes - 4;
-    }
-    if (remainingBytes == 3) {
-      buffer[offset] = (byte) value;
-      buffer[1 + offset] = (byte) (value >>> 8);
-      buffer[2 + offset] = (byte) (value >>> 16);
-    }
-    if (remainingBytes == 2) {
-      buffer[offset] = (byte) value;
-      buffer[1 + offset] = (byte) (value >>> 8);
-    }
-    if (remainingBytes == 1) {
-      buffer[offset] = (byte) value;
-    }
-    return 0;
-  }
-
-  private static int bytesToIntSafe(byte[] bytes, int offset) {
-    if ((bytes.length - offset) % 4 == 0 || (bytes.length - offset) >= 4) {
-      return Byte.toUnsignedInt(bytes[3 + offset]) << 24
-          | Byte.toUnsignedInt(bytes[2 + offset]) << 16
-          | Byte.toUnsignedInt(bytes[1 + offset]) << 8
-          | Byte.toUnsignedInt(bytes[offset]);
-    }
-    if ((bytes.length - offset) % 3 == 0) {
-      return (Byte.toUnsignedInt(bytes[2 + offset]) << 16)
-          | (Byte.toUnsignedInt(bytes[1 + offset]) << 8)
-          | (Byte.toUnsignedInt(bytes[offset]));
-    }
-    if ((bytes.length - offset) % 2 == 0) {
-      return Byte.toUnsignedInt(bytes[1 + offset]) << 8 | Byte.toUnsignedInt(bytes[offset]);
-    }
-
-    return Byte.toUnsignedInt(bytes[offset]);
-  }
-
-  public static void intToBytes(int value, byte[] writeBuffer, int offset) {
-    writeBuffer[offset] = (byte) value;
-    writeBuffer[1 + offset] = (byte) (value >>> 8);
-    writeBuffer[2 + offset] = (byte) (value >>> 16);
-    writeBuffer[3 + offset] = (byte) (value >>> 24);
-  }
-
   public byte[] decryptAndVerify(byte[] cipher, byte[] assoData, byte[] key, byte[] nonce) {
     int[] state = new int[STATE_WORDS];
     int cipherTextLength = cipher.length - TAG_BYTES;
@@ -186,7 +104,7 @@ public final class Schwaemm {
 
     verifyTag(
         state,
-        createIntArrayFromBytes(Arrays.copyOfRange(cipher, cipherTextLength, cipher.length),
+        ConversionUtil.createIntArrayFromBytes(Arrays.copyOfRange(cipher, cipherTextLength, cipher.length),
             type.getVerifyTagLength()));
     return message;
   }
@@ -194,7 +112,7 @@ public final class Schwaemm {
   void decrypt(int[] state, byte[] message, byte[] cipher) {
     int cipherLength = message.length;
     int[] cipherAsInt =
-        createIntArrayFromBytes(
+        ConversionUtil.createIntArrayFromBytes(
             Arrays.copyOfRange(cipher, 0, cipher.length - TAG_BYTES), (message.length - 1) / 4 + 1);
     int index = 0;
     int messageIndex = 0;
@@ -209,7 +127,7 @@ public final class Schwaemm {
       cipherLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
       messageIndex += RATE_BYTES;
-      populateByteArrayFromInts(messageInt, message, 0, TAG_BYTES, 0);
+      ConversionUtil.populateByteArrayFromInts(messageInt, message, 0, TAG_BYTES, 0);
     }
 
     state[STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
@@ -223,26 +141,13 @@ public final class Schwaemm {
     sparkle.accept(state);
   }
 
-  private void copyLengthBytesFromStateToBuffer(int[] buffer, int[] state, int length) {
-    int rest = RATE_BYTES - length;
-    byte[] bytesCreated = new byte[4];
-    int index = length / 4;
-    intToBytes(state[index], bytesCreated, 0);
-    // First copy uneven bytes into buffer[index]. If length % 4 = 0 this is the same as
-    // copying buffer[index] = state[index] for all indexes.
-    buffer[index] = getIntFromBytes(length % 4, buffer[index], bytesCreated);
-    for (; rest > 4; rest -= 4, index++) {
-      buffer[index + 1] = state[index + 1];
-    }
-  }
-
   private void rhoWhiDecLast(
       int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
 
     if (length < RATE_BYTES) {
-      copyLengthBytesFromStateToBuffer(buffer, state, length);
+      ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state, length, RATE_BYTES - length);
       buffer[length / 4] ^= 128 << (8 * (length % 4));
     }
 
@@ -254,7 +159,7 @@ public final class Schwaemm {
       buffer[i] ^= tmp1;
       buffer[j] ^= tmp2;
     }
-    populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
+    ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
   private void rhoWhiDec(int[] state, int[] message, int[] cipher, int cipherIndex) {
@@ -286,19 +191,19 @@ public final class Schwaemm {
       associateData(state, assoData);
     }
     byte[] cipherText = encrypt(state, message);
-    int[] intKey = createIntArrayFromBytes(key, KEY_BYTES / 4);
+    int[] intKey = ConversionUtil.createIntArrayFromBytes(key, KEY_BYTES / 4);
 
     finalize(state, intKey);
     return generateTag(state, cipherText, message.length);
   }
 
   byte[] generateTag(int[] state, byte[] cipher, int messageLength) {
-    populateByteArrayFromInts(state, cipher, RATE_WORDS, TAG_BYTES, messageLength);
+    ConversionUtil.populateByteArrayFromInts(state, cipher, RATE_WORDS, TAG_BYTES, messageLength);
     return cipher;
   }
 
   void finalize(int[] state, byte[] key) {
-    int[] intKey = createIntArrayFromBytes(key, KEY_BYTES / 4);
+    int[] intKey = ConversionUtil.createIntArrayFromBytes(key, KEY_BYTES / 4);
     finalize(state, intKey);
   }
 
@@ -311,7 +216,7 @@ public final class Schwaemm {
   byte[] encrypt(int[] state, byte[] message) {
     byte[] cipherBytes = new byte[message.length + TAG_BYTES];
     int msgLength = message.length;
-    int[] msgAsInt = createIntArrayFromBytes(message, (message.length - 1) / 4 + 1);
+    int[] msgAsInt = ConversionUtil.createIntArrayFromBytes(message, (message.length - 1) / 4 + 1);
     int index = 0;
     int cipherIndex = 0;
     while (msgLength > RATE_BYTES) {
@@ -321,7 +226,7 @@ public final class Schwaemm {
       msgLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
       cipherIndex += RATE_BYTES;
-      populateByteArrayFromInts(cipher, cipherBytes, 0, TAG_BYTES, 0);
+      ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes, 0, TAG_BYTES, 0);
     }
 
     state[STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
@@ -363,7 +268,7 @@ public final class Schwaemm {
       buffer[i] ^= tmp1;
       buffer[j] ^= tmp2;
     }
-    populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
+    ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
   /**
@@ -374,7 +279,7 @@ public final class Schwaemm {
    */
   void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
-    int[] dataAsInt = createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
+    int[] dataAsInt = ConversionUtil.createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
     int index = 0;
     while (dataSize > RATE_BYTES) {
       rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
@@ -421,9 +326,9 @@ public final class Schwaemm {
   }
 
   void initialize(int[] state, byte[] key, byte[] nonce) {
-    int[] intNonce = createIntArrayFromBytes(nonce, NONCE_BYTES / 4);
+    int[] intNonce = ConversionUtil.createIntArrayFromBytes(nonce, NONCE_BYTES / 4);
     System.arraycopy(intNonce, 0, state, 0, intNonce.length);
-    int[] intKey = createIntArrayFromBytes(key, KEY_BYTES / 4);
+    int[] intKey = ConversionUtil.createIntArrayFromBytes(key, KEY_BYTES / 4);
     System.arraycopy(intKey, 0, state, RATE_WORDS, intKey.length);
     sparkle.accept(state);
   }

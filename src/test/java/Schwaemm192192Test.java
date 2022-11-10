@@ -200,7 +200,7 @@ public final class Schwaemm192192Test {
     // TODO REFACTOR ALL HARDCODED STATE LENGTHS IN TESTS
     // 6 = 12 / 2 (by the state)
     Assertions.assertThatThrownBy(() -> schwaemmJava.verifyTag(data.stateJ,
-            Schwaemm.createIntArrayFromBytes(randomCipher, 6))).isInstanceOf(RuntimeException.class)
+            ConversionUtil.createIntArrayFromBytes(randomCipher, 6))).isInstanceOf(RuntimeException.class)
         .hasMessage("Could not verify tag!");
   }
 
