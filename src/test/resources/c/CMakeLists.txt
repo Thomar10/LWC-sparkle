@@ -60,6 +60,23 @@ add_library(schwaemm256256 SHARED
         Implementations/crypto_aead/schwaemm256256v2/add_armv7m_fast/sparkle_opt.c
         Implementations/crypto_aead/schwaemm256256v2/add_armv7m_fast/sparkle_opt.h)
 
+add_library(esch256 SHARED
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/api.h
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/crypto_hash.h
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/hash.c
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/genkat_hash.c
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/esch_cfg.h
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/sparkle_opt.c
+        Implementations/crypto_hash/esch256v2/add_armv7m_fast/sparkle_opt.h)
+
+add_library(esch384 SHARED
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/api.h
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/crypto_hash.h
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/hash.c
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/genkat_hash.c
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/esch_cfg.h
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/sparkle_opt.c
+        Implementations/crypto_hash/esch384v2/add_armv7m_fast/sparkle_opt.h)
 
 add_library(sparkle SHARED
         Implementations/crypto_aead/schwaemm128128v2/add_armv7m_small/sparkle_opt.c

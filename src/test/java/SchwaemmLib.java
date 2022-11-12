@@ -97,8 +97,8 @@ public final class SchwaemmLib {
     }
   }
 
-  public void encryptAndTag(byte[] c, final byte[] m, long mlen, final byte[] ad,
-      long adlen, final byte[] npub, final byte[] k) {
+  public void encryptAndTag(byte[] c, final byte[] m, long mlen, final byte[] ad, long adlen,
+      final byte[] npub, final byte[] k) {
     Memory memory = new Memory(64);
     int res = schwaemmC.crypto_aead_encrypt(c, memory, m, mlen, ad, adlen, null, npub, k);
     Assertions.assertThat(memory.getLong(0)).isEqualTo(c.length);
@@ -107,8 +107,8 @@ public final class SchwaemmLib {
     }
   }
 
-  public void decryptAndVerify(byte[] m, final byte[] c, long clen,
-      final byte[] ad, long adlen, final byte[] npub, final byte[] k) {
+  public void decryptAndVerify(byte[] m, final byte[] c, long clen, final byte[] ad, long adlen,
+      final byte[] npub, final byte[] k) {
     Memory memory = new Memory(64);
     int res = schwaemmC.crypto_aead_decrypt(m, memory, null, c, clen, ad, adlen, npub, k);
     Assertions.assertThat(memory.getLong(0)).isEqualTo(m.length);

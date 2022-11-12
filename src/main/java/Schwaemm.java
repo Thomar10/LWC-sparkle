@@ -105,24 +105,21 @@ public final class Schwaemm {
 
     verifyTag(
         state,
-        ConversionUtil.createIntArrayFromBytes(Arrays.copyOfRange(cipher, cipherTextLength, cipher.length),
+        ConversionUtil.createIntArrayFromBytes(
+            Arrays.copyOfRange(cipher, cipherTextLength, cipher.length),
             type.getVerifyTagLength()));
     return message;
   }
 
   void decrypt(int[] state, byte[] message, byte[] cipher) {
     int cipherLength = message.length;
-    int[] cipherAsInt =
-        ConversionUtil.createIntArrayFromBytes(
-            Arrays.copyOfRange(cipher, 0, cipher.length - TAG_BYTES), (message.length - 1) / 4 + 1);
+    int[] cipherAsInt = ConversionUtil.createIntArrayFromBytes(
+        Arrays.copyOfRange(cipher, 0, cipher.length - TAG_BYTES), (message.length - 1) / 4 + 1);
     int index = 0;
     int messageIndex = 0;
     while (cipherLength > RATE_BYTES) {
       int[] messageInt = new int[state.length / 2];
-      rhoWhiDec(
-          state,
-          Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length),
-          messageInt,
+      rhoWhiDec(state, Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length), messageInt,
           messageIndex);
       sparkleSlim.accept(state);
       cipherLength -= RATE_BYTES;
@@ -133,17 +130,12 @@ public final class Schwaemm {
 
     state[STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
 
-    rhoWhiDecLast(
-        state,
-        Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length),
-        cipherLength,
-        message,
-        messageIndex);
+    rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length), cipherLength,
+        message, messageIndex);
     sparkle.accept(state);
   }
 
-  private void rhoWhiDecLast(
-      int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
+  private void rhoWhiDecLast(int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
 
@@ -232,12 +224,8 @@ public final class Schwaemm {
 
     state[STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
 
-    rhoWhiEncLast(
-        state,
-        Arrays.copyOfRange(msgAsInt, index, msgAsInt.length),
-        msgLength,
-        cipherBytes,
-        cipherIndex);
+    rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), msgLength,
+        cipherBytes, cipherIndex);
     sparkle.accept(state);
   }
 
@@ -252,8 +240,7 @@ public final class Schwaemm {
     }
   }
 
-  private void rhoWhiEncLast(
-      int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
+  private void rhoWhiEncLast(int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
     if (length < RATE_BYTES) {

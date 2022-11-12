@@ -1,9 +1,24 @@
 import java.util.Random;
 
 public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] message,
-                             byte[] cipherC,
-                             byte[] cipherJava,
-                             int[] stateC, int[] stateJ) {
+                             byte[] cipherC, byte[] cipherJava, int[] stateC, int[] stateJ) {
+
+  static byte[] initBuffer(byte[] buffer) {
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+    return buffer;
+  }
+
+
+  static String printBytesAsStringLength(byte[] bytes, int length) {
+    StringBuilder s = new StringBuilder();
+    for (int i = 0; i < length; i++) {
+      s.append(String.format("%02X", bytes[i]));
+    }
+    s.append("\n");
+    return s.toString();
+  }
 
   private static final Random random = new Random();
 
