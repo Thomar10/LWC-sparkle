@@ -1,6 +1,10 @@
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 public final class Schwaemm128128Test {
 
@@ -211,4 +215,53 @@ public final class Schwaemm128128Test {
 
     schwaemmC.ProcessCipherText(data.stateC(), randomCipher, data.message(), data.message().length);
   }
+
+  @Test
+  void genkatAeadTest() throws IOException {
+    byte[] expectedResult = Schwaemm128128Test.class.getResourceAsStream(
+        "/schwaemm/LWC_AEAD_KAT_128_128.txt").readAllBytes();
+    byte[] key = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S128128.getKeySize()]);
+    byte[] nonce = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S128128.getNonceSize()]);
+    byte[] messageToCopy = SchwaemmHelper.initBuffer(new byte[32]);
+    byte[] message2;
+    byte[] associateToCopy = SchwaemmHelper.initBuffer(new byte[32]);
+
+    int count = 1;
+    int mlen;
+    int mlen2;
+    int adlen;
+    StringBuilder builder = new StringBuilder();
+    for (mlen = 0; mlen <= 32; mlen++) {
+      byte[] cipher = new byte[mlen + SchwaemmType.S128128.getTagBytes()];
+      byte[] message = Arrays.copyOfRange(messageToCopy, 0, mlen);
+      for (adlen = 0; adlen <= 32; adlen++) {
+        byte[] associate = Arrays.copyOfRange(associateToCopy, 0, adlen);
+        builder.append(String.format("Count = %d\n", count));
+        builder.append(String.format("Key = %s",
+            SchwaemmHelper.printBytesAsStringLength(key, SchwaemmType.S128128.getKeySize())));
+        builder.append(String.format("Nonce = %s",
+            SchwaemmHelper.printBytesAsStringLength(nonce, SchwaemmType.S128128.getNonceSize())));
+        builder.append(String.format("PT = %s",
+            SchwaemmHelper.printBytesAsStringLength(message, mlen)));
+        builder.append(String.format("AD = %s",
+            SchwaemmHelper.printBytesAsStringLength(associate, adlen)));
+
+        schwaemmJava.encryptAndTag(message, cipher, associate, key, nonce);
+
+        builder.append(String.format("CT = %s",
+            SchwaemmHelper.printBytesAsStringLength(cipher,
+                mlen + SchwaemmType.S128128.getTagBytes())));
+        builder.append("\n");
+
+        message2 = schwaemmJava.decryptAndVerify(cipher, associate, key, nonce);
+        mlen2 = message2.length;
+        Assertions.assertThat(message).isEqualTo(message2);
+        Assertions.assertThat(mlen).isEqualTo(mlen2);
+        count++;
+      }
+    }
+    Assertions.assertThat(expectedResult)
+        .isEqualTo(builder.toString().getBytes(StandardCharsets.UTF_8));
+  }
+
 }
