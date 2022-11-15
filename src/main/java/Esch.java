@@ -41,8 +41,8 @@ public final class Esch {
                 SPARKLE_CAPACITY = 256;
                 SPARKLE_STEPS_SLIM = 7;
                 SPARKLE_STEPS_BIG = 11;
-                this.sparkleSlim = Sparkle::sparkle256Slim;
-                this.sparkle = Sparkle::sparkle256;
+                this.sparkleSlim = Sparkle::sparkle384Slim;
+                this.sparkle = Sparkle::sparkle384;
             }
             case 384 -> {
                 ESCH_DIGEST_LEN = 384;
@@ -60,6 +60,7 @@ public final class Esch {
 
         DIGEST_WORDS = (ESCH_DIGEST_LEN/32);
         DIGEST_BYTES = (ESCH_DIGEST_LEN/8);
+
         STATE_BRANS = (SPARKLE_STATE / 64);
         STATE_WORDS = (SPARKLE_STATE / 32);
         STATE_BYTES = (SPARKLE_STATE / 8);
@@ -164,6 +165,8 @@ public final class Esch {
             index += RATE_WORDS;
         }
 
+
+
         state[STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
         add_msg_blk_last(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), length);
         sparkle.accept(state);
@@ -180,7 +183,6 @@ public final class Esch {
         outlen = RATE_BYTES;
         outIndex += RATE_BYTES;
         while (outlen < DIGEST_BYTES) {
-            System.out.println(Arrays.toString(out));
             sparkleSlim.accept(state);
             ConversionUtil.populateByteArrayFromInts(state, out,0, RATE_BYTES, outIndex);
             outlen += RATE_BYTES;
@@ -191,8 +193,6 @@ public final class Esch {
     int crypto_hash(byte[] out, byte[] in)
     {
         int[] state = new int[STATE_WORDS];
-        System.out.println(STATE_WORDS);
-        System.out.println(DIGEST_BYTES);
 
         Initialize(state);
         ProcessMessage(state, in);
