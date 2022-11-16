@@ -16,7 +16,6 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     for (int i = 0; i < length; i++) {
       s.append(String.format("%02X", bytes[i]));
     }
-    s.append("\n");
     return s.toString();
   }
 
