@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class MaskedSparkle {
     public static final int maxBranches = 8;
     private static final int[] rcon =
@@ -123,8 +125,65 @@ public class MaskedSparkle {
 
     static void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
         // Let state[j] be x and state[j+1] be y
-        state[j] += rot(state[j + 1], shiftOne);
+        state[j] = secureAdditionGoubin(state[j], rot(state[j + 1], shiftOne));
         state[j + 1] ^= rot(state[j], shiftTwo);
         state[j] ^= rc;
+    }
+
+    static int secureAnd(int x, int y){
+        Random random = new Random();
+        int n = 32;
+        int[][] r = new int[n][n];
+
+        for(int i = 0; i < n; i++){
+            for(int j = i + 1; j < n; j++){
+                r[i][j] = random.nextInt(2);
+                r[j][i] = (r[i][j] ^ (getBit(x, i) & getBit(y, j))) ^ (getBit(x, j) & getBit(y, i));
+            }
+        }
+
+        int z = 0;
+
+        for(int i = 0; i < n; i++){
+            int bit = getBit(x, i) & getBit(y, i);
+            z = setBit(z, bit, i);
+
+            for(int j = 0; j < n; j++){
+                if(i != j){
+                    bit = getBit(z, i) ^ r[i][j];
+                    z = setBit(z, bit, i);
+                }
+            }
+        }
+
+        return z;
+    }
+
+    static int getBit(int val, int pos){
+        int mask = 1 << pos;
+        return ((val & mask) > 0) ? 1 : 0;
+    }
+
+    //Yes
+    static int setBit(int target, int bit, int pos){
+        return (target & ~(1 << pos)) | (bit << pos);
+    }
+    static void secureAddition(int x, int y){
+
+    }
+
+    static int secureAdditionGoubin(int x, int y){
+        int w = secureAnd(x, y);
+        int u = 0;
+        int a = x ^ y;
+
+        int k = 2; //What is k? Maybe shares
+        for(int j = 0; j < k - 1; j++){
+            int ua = secureAnd(u, a);
+            u = ua ^ w;
+            u = 2*u;
+        }
+
+        return x ^ y ^ u;
     }
 }
