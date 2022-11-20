@@ -1,16 +1,22 @@
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ThreadedMaskedSparkle {
 
   private static int[] share0;
   private static int[] share1;
 
-  public static void sparkle256(int[] state) throws InterruptedException {
+  private ConcurrentHashMap<String, int[]> shares;
+
+  public void sparkle256(int[] state) throws InterruptedException {
     generateRandomMaskedState(state);
-    Thread one = new Thread(() -> SparkleCopy.sparkle256(share0));
-    Thread two = new Thread(() -> MaskedSparkle.sparkle256(share1));
+    shares = new ConcurrentHashMap<>();
+
+    Thread one = new Thread(() -> new SparkleCopy(share0, shares).sparkle256());
+    Thread two = new Thread(() -> new MaskedSparkle(share1, shares).sparkle256());
     one.start();
     two.start();
+    Thread.sleep(10);
     one.join();
     two.join();
     recoverState(state);

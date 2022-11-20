@@ -1,9 +1,14 @@
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Sparkle permutation.
  */
 public final class SparkleCopy {
 
+  Random random = new Random();
   public static final int maxBranches = 8;
+  private final int[] state;
   private static final int[] rcon =
       new int[]{
           -1209970334,
@@ -15,29 +20,15 @@ public final class SparkleCopy {
           -809524792,
           -1028445891
       };
+  private final ConcurrentHashMap<String, int[]> map;
 
-  public static void sparkle256(int[] state) {
-    sparkle(state, 4, 10);
+  public SparkleCopy(int[] state, ConcurrentHashMap<String, int[]> map) {
+    this.state = state;
+    this.map = map;
   }
 
-  public static void sparkle256Slim(int[] state) {
-    sparkle(state, 4, 7);
-  }
-
-  public static void sparkle384(int[] state) {
-    sparkle(state, 6, 11);
-  }
-
-  public static void sparkle384Slim(int[] state) {
-    sparkle(state, 6, 7);
-  }
-
-  public static void sparkle512(int[] state) {
-    sparkle(state, 8, 12);
-  }
-
-  public static void sparkle512Slim(int[] state) {
-    sparkle(state, 8, 8);
+  public void sparkle256() {
+    sparkle(this.state, 4, 10);
   }
 
   static int rot(int x, int n) {
@@ -48,17 +39,17 @@ public final class SparkleCopy {
     return rot(x ^ (x << 16), 16);
   }
 
-  private static void sparkle(int[] state, int brans, int steps) {
+  private void sparkle(int[] state, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
-    for (int i = 0; i < steps; i++) {
+    for (int i = 0; i < 1; i++) {
       state[1] ^= rcon[i % maxBranches];
       state[3] ^= i;
-      for (int j = 0; j < 2 * brans; j += 2) {
+      for (int j = 0; j < 1; j += 2) {
         rc = rcon[j >> 1];
-        alzetteRound(state, j, 31, 24, rc);
-        alzetteRound(state, j, 17, 17, rc);
-        alzetteRound(state, j, 0, 31, rc);
-        alzetteRound(state, j, 24, 16, rc);
+        alzetteRound(state, j, 31, 24, rc, i);
+        alzetteRound(state, j, 17, 17, rc, i);
+        alzetteRound(state, j, 0, 31, rc, i);
+        alzetteRound(state, j, 24, 16, rc, i);
       }
       tmpx = x0 = state[0];
       tmpy = y0 = state[1];
@@ -81,55 +72,55 @@ public final class SparkleCopy {
     }
   }
 
-  private static void sparkleInverse(int[] state, int brans, int steps) {
-    int rc, tmpx, tmpy, xb1, yb1;
-
-    for (int i = steps - 1; i >= 0; i--) {
-      tmpx = tmpy = 0;
-      xb1 = state[brans - 2];
-      yb1 = state[brans - 1];
-      for (int j = brans - 2; j > 0; j -= 2) {
-        tmpx ^= (state[j] = state[j + brans]);
-        state[j + brans] = state[j - 2];
-        state[j + 1] = state[j + brans + 1];
-        tmpy ^= state[j + 1];
-        state[j + brans + 1] = state[j - 1];
-      }
-      tmpx ^= (state[0] = state[brans]);
-      state[brans] = xb1;
-      tmpy ^= (state[1] = state[brans + 1]);
-      state[brans + 1] = yb1;
-      tmpx = ell(tmpx);
-      tmpy = ell(tmpy);
-      for (int j = brans - 2; j >= 0; j -= 2) {
-        state[j + brans] ^= (tmpy ^ state[j]);
-        state[j + brans + 1] ^= (tmpx ^ state[j + 1]);
-      }
-
-      for (int j = 0; j < 2 * brans; j += 2) {
-        rc = rcon[j >> 1];
-        alzetteRoundInverse(state, j, 16, 24, rc);
-        alzetteRoundInverse(state, j, 31, 0, rc);
-        alzetteRoundInverse(state, j, 17, 17, rc);
-        alzetteRoundInverse(state, j, 24, 31, rc);
-      }
-      // Add round constant
-      state[1] ^= rcon[i % maxBranches];
-      state[3] ^= i;
-    }
-  }
-
-  static void alzetteRoundInverse(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
-    state[j] ^= rc;
-    state[j + 1] ^= rot(state[j], shiftOne);
-    state[j] -= rot(state[j + 1], shiftTwo);
-  }
-
-  static void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
+  void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc, int i) {
     // Let state[j] be x and state[j+1] be y
-//    state[j] += rot(state[j + 1], shiftOne);
+    int toAdd = rot(state[j + 1], shiftOne);
+    map.put(String.valueOf(j) + i + "SC", state);
+    while (!map.containsKey(String.valueOf(j) + i + "MS")) {
+    }
+    addArithmeticToBinary(toAdd, map.get(String.valueOf(j) + i + "MS"), j);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
   }
 
+  public int binaryToArithmetic(int x, int r) {
+    int gamma = random.nextInt(Integer.MAX_VALUE);
+    int T = x ^ gamma;
+    T = T - gamma;
+    T = T ^ x;
+    gamma = gamma ^ r;
+    int A = x ^ gamma;
+    A = A - gamma;
+    return A ^ T;
+  }
+
+  void addArithmeticToBinary(int toAdd, int[] otherShares, int j) {
+    //Convert to arithmetic
+    state[j] = binaryToArithmetic(state[j], otherShares[j]);
+
+    state[j] += toAdd;
+    //Convert to binary
+    state[j] = arithmeticToBinary(state[j], otherShares[j]);
+  }
+
+  public int arithmeticToBinary(int A, int r) {
+    int gamma = random.nextInt(Integer.MAX_VALUE);
+    int T = 2 * gamma;
+    int x = gamma ^ r;
+    int omega = gamma & x;
+    x = T ^ A;
+    gamma = gamma ^ x;
+    gamma = gamma & r;
+    omega = omega ^ gamma;
+    gamma = T & A;
+    omega = omega ^ gamma;
+    for (int k = 1; k < 32; k++) {
+      gamma = T & r;
+      gamma = gamma ^ omega;
+      T = T & A;
+      gamma = gamma ^ T;
+      T = 2 * gamma;
+    }
+    return x ^ T;
+  }
 }

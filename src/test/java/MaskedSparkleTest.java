@@ -2,7 +2,6 @@ import java.util.Arrays;
 import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 
 public class MaskedSparkleTest {
 
@@ -11,9 +10,9 @@ public class MaskedSparkleTest {
   @RepeatedTest(1)
   void maskedSparkle256Test() throws InterruptedException {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-    ThreadedMaskedSparkle.sparkle256(states.stateNormal2);
+    new ThreadedMaskedSparkle().sparkle256(states.stateNormal2);
     Sparkle.sparkle256(states.stateNormal);
-
+    System.out.println(Arrays.toString(states.stateNormal2));
     Assertions.assertThat(states.stateNormal).isEqualTo(states.stateNormal2);
   }
 
