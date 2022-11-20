@@ -7,7 +7,7 @@ public final class ThreadedMaskedSparkle {
 
   public static void sparkle256(int[] state) throws InterruptedException {
     generateRandomMaskedState(state);
-    Thread one = new Thread(() -> Sparkle.sparkle256(share0));
+    Thread one = new Thread(() -> SparkleCopy.sparkle256(share0));
     Thread two = new Thread(() -> MaskedSparkle.sparkle256(share1));
     one.start();
     two.start();
