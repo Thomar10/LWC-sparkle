@@ -1,7 +1,7 @@
 /**
  * Sparkle permutation.
  */
-public final class MaskedSparkle {
+public final class PassiveSparkle {
 
   public static final int maxBranches = 8;
   private static final int[] rcon = new int[]{-1209970334, -1083090816, 951376470, 844003128,
@@ -42,8 +42,6 @@ public final class MaskedSparkle {
   private static void sparkle(int[] state, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
     for (int i = 0; i < steps; i++) {
-      state[1] ^= rcon[i % maxBranches];
-      state[3] ^= i;
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc);
@@ -76,6 +74,6 @@ public final class MaskedSparkle {
     // Let state[j] be x and state[j+1] be y
 //    state[j] += rot(state[j + 1], shiftOne);
     state[j + 1] ^= rot(state[j], shiftTwo);
-    state[j] ^= rc;
   }
+
 }
