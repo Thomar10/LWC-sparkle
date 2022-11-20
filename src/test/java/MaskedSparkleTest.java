@@ -6,7 +6,7 @@ import org.junit.jupiter.api.RepeatedTest;
 public class MaskedSparkleTest {
 
     @RepeatedTest(1)
-    void maskedSparkle256Test(){
+    void maskedSparkle256Test() throws InterruptedException {
         RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
         ThreadedMaskedSparkle.sparkle256(states.stateNormal2);
         Sparkle.sparkle256(states.stateNormal);

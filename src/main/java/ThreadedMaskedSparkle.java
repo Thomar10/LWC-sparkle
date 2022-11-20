@@ -5,12 +5,14 @@ public final class ThreadedMaskedSparkle {
   private static int[] share0;
   private static int[] share1;
 
-  public static void sparkle256(int[] state) {
+  public static void sparkle256(int[] state) throws InterruptedException {
     generateRandomMaskedState(state);
-    Thread one = new Thread(() -> MaskedSparkle.sparkle256(share0));
-    Thread two = new Thread(() -> PassiveSparkle.sparkle256(share1));
-    MaskedSparkle.sparkle256(share0);
-    PassiveSparkle.sparkle256(share1);
+    Thread one = new Thread(() -> Sparkle.sparkle256(share0));
+    Thread two = new Thread(() -> MaskedSparkle.sparkle256(share1));
+    one.start();
+    two.start();
+    one.join();
+    two.join();
     recoverState(state);
   }
 

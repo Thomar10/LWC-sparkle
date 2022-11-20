@@ -127,7 +127,7 @@ public final class Sparkle {
 
   static void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
     // Let state[j] be x and state[j+1] be y
-    state[j] += rot(state[j + 1], shiftOne);
+//    state[j] += rot(state[j + 1], shiftOne);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
   }
