@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,9 +20,9 @@ public final class SparkleCopy {
           -809524792,
           -1028445891
       };
-  private final ConcurrentHashMap<String, int[]> map;
+  private final ConcurrentHashMap<String, Integer> map;
 
-  public SparkleCopy(int[] state, ConcurrentHashMap<String, int[]> map) {
+  public SparkleCopy(int[] state, ConcurrentHashMap<String, Integer> map) {
     this.state = state;
     this.map = map;
   }
@@ -45,7 +44,7 @@ public final class SparkleCopy {
     for (int i = 0; i < steps; i++) {
       state[1] ^= rcon[i % maxBranches];
       state[3] ^= i;
-      for (int j = 0; j < 2*brans; j += 2) {
+      for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc, i);
         alzetteRound(state, j, 17, 17, rc, i);
@@ -77,15 +76,16 @@ public final class SparkleCopy {
     // Let state[j] be x and state[j+1] be y
     int toAdd = rot(state[j + 1], shiftOne);
 
-    map.put(String.valueOf(j) + i + "SC", Arrays.copyOf(state, state.length));
-
-    while (!map.containsKey(String.valueOf(j) + i + "MS")) {
+    String toAddId = String.valueOf(j) + i + shiftOne + shiftTwo + "toAdd";
+    String shareId = String.valueOf(j) + i + shiftOne + shiftTwo + "share";
+    while (!map.containsKey(toAddId)) {
     }
-    int[] otherShares = map.get(String.valueOf(j) + i + "MS");
-    //toAdd = binaryToArithmetic(toAdd, rot(otherShares[j + 1], shiftOne));
-    map.put(String.valueOf(j) + i + "toAdd", new int[]{toAdd});
+    while (!map.containsKey(shareId)) {
+    }
+    int otherToAdd = map.get(toAddId);
+    int share = map.get(shareId);
 
-    //addArithmeticToBinary(toAdd, otherShares, j);
+    addArithmeticToBinary(toAdd, otherToAdd, share, j);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
   }
@@ -101,15 +101,15 @@ public final class SparkleCopy {
     return A ^ T;
   }
 
-  void addArithmeticToBinary(int toAdd, int[] otherShares, int j) {
+  void addArithmeticToBinary(int toAdd, int otherToAdd, int otherShares, int j) {
     //Convert to arithmetic
-    state[j] = binaryToArithmetic(state[j], otherShares[j]);
-    map.put(String.valueOf(j) + 0 + "SCADDD", Arrays.copyOf(state, state.length));
+    state[j] = binaryToArithmetic(state[j], otherShares);
+    int toAddArith = binaryToArithmetic(toAdd, otherToAdd);
 
-    state[j] += toAdd;
-    map.put(String.valueOf(j) + 0 + "SCADD", Arrays.copyOf(state, state.length));
+    state[j] += toAddArith + otherToAdd;
+
     //Convert to binary
-    state[j] = arithmeticToBinary(state[j], otherShares[j]);
+    state[j] = arithmeticToBinary(state[j], otherShares);
   }
 
   public int arithmeticToBinary(int A, int r) {

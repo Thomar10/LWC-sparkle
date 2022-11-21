@@ -6,7 +6,7 @@ public final class ThreadedMaskedSparkle {
   private static int[] share0;
   private static int[] share1;
 
-  private ConcurrentHashMap<String, int[]> shares;
+  private ConcurrentHashMap<String, Integer> shares;
 
   public void sparkle256(int[] state) throws InterruptedException {
     generateRandomMaskedState(state);

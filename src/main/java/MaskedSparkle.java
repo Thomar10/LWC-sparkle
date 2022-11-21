@@ -11,9 +11,9 @@ public final class MaskedSparkle {
   private final int[] state;
   private static final int[] rcon = new int[]{-1209970334, -1083090816, 951376470, 844003128,
       -1156479509, 1333558103, -809524792, -1028445891};
-  private final ConcurrentHashMap<String, int[]> map;
+  private final ConcurrentHashMap<String, Integer> map;
 
-  public MaskedSparkle(int[] state, ConcurrentHashMap<String, int[]> map) {
+  public MaskedSparkle(int[] state, ConcurrentHashMap<String, Integer> map) {
     this.state = state;
     this.map = map;
   }
@@ -33,7 +33,7 @@ public final class MaskedSparkle {
   private void sparkle(int[] state, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
     for (int i = 0; i < steps; i++) {
-      for (int j = 0; j < 2*brans; j += 2) {
+      for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc, i);
         alzetteRound(state, j, 17, 17, rc, i);
@@ -64,51 +64,8 @@ public final class MaskedSparkle {
   void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc, int i) {
     // Let state[j] be x and state[j+1] be y
     int toAdd = rot(state[j + 1], shiftOne);
-    map.put(String.valueOf(j) + i + "MS", state);
-    while (!map.containsKey(String.valueOf(j) + i + "SC")) {
-    }
-    //addArithmeticToBinary(toAdd, map.get(String.valueOf(j) + i + "SC"), j);
+    map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "toAdd", toAdd);
+    map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "share", state[j]);
     state[j + 1] ^= rot(state[j], shiftTwo);
-  }
-
-  public int binaryToArithmetic(int x, int r) {
-    int gamma = random.nextInt(Integer.MAX_VALUE);
-    int T = x ^ gamma;
-    T = T - gamma;
-    T = T ^ x;
-    gamma = gamma ^ r;
-    int A = x ^ gamma;
-    A = A - gamma;
-    return A ^ T;
-  }
-
-  void addArithmeticToBinary(int toAdd, int[] otherShares, int j) {
-    //Convert to arithmetic
-    state[j] = binaryToArithmetic(state[j], otherShares[j]);
-
-    state[j] += toAdd;
-    //Convert to binary
-    state[j] = arithmeticToBinary(state[j], otherShares[j]);
-  }
-
-  public int arithmeticToBinary(int A, int r) {
-    int gamma = random.nextInt(Integer.MAX_VALUE);
-    int T = 2 * gamma;
-    int x = gamma ^ r;
-    int omega = gamma & x;
-    x = T ^ A;
-    gamma = gamma ^ x;
-    gamma = gamma & r;
-    omega = omega ^ gamma;
-    gamma = T & A;
-    omega = omega ^ gamma;
-    for (int k = 1; k < 32; k++) {
-      gamma = T & r;
-      gamma = gamma ^ omega;
-      T = T & A;
-      gamma = gamma ^ T;
-      T = 2 * gamma;
-    }
-    return x ^ T;
   }
 }

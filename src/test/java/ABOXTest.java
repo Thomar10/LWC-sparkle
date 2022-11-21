@@ -3,10 +3,10 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-
+// TODO DELETE ONLY USED FOR EASIER 'DEBUGGING'
 public class ABOXTest {
 
-  static Random random = new Random(123);
+  static Random random = new Random();
 
 
   @Test
@@ -41,7 +41,7 @@ public class ABOXTest {
     //System.out.println(Arrays.toString(alzetteRoundCopy(share0, 0, 31)));
     alzetteRoundCopy(share0, 0, 31);
     //System.out.println(Arrays.toString(alzetteRoundMasked(states.copy, 0, 31)));
-    alzetteRoundMasked(states.copy, 0, 31);
+    alzetteRoundMasked(states.copy, share0, 0, 31);
     Assertions.assertThat(share0[0] ^ states.copy[0]).isEqualTo(states.stateNormal[0]);
 
   }
@@ -91,14 +91,14 @@ public class ABOXTest {
   static int[] alzetteRoundCopy(int[] state, int j, int shiftOne) {
     // Let state[j] be x and state[j+1] be y
     int[] share = new int[]{574963334, 952629791};
-    //state[j] += rot(state[j + 1], shiftOne);
+    //state[j] ^= rot(state[j + 1], shiftOne);
     return state;
   }
 
 
-  static int[] alzetteRoundMasked(int[] state, int j, int shiftOne) {
+  static int[] alzetteRoundMasked(int[] state, int[] theOtherShare, int j, int shiftOne) {
     // Let state[j] be x and state[j+1] be y
-    int[] theOtherShare = new int[]{2127939176, 647624789};
+
     int shareRot = rot(theOtherShare[j+1], shiftOne);
     int toAdd = binaryToArithmetic(rot(state[j + 1], shiftOne), shareRot);
     System.out.println("Masked toAdd " + (toAdd + shareRot));
