@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,10 +42,10 @@ public final class SparkleCopy {
 
   private void sparkle(int[] state, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < steps; i++) {
       state[1] ^= rcon[i % maxBranches];
       state[3] ^= i;
-      for (int j = 0; j < 1; j += 2) {
+      for (int j = 0; j < 2*brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc, i);
         alzetteRound(state, j, 17, 17, rc, i);
@@ -75,10 +76,16 @@ public final class SparkleCopy {
   void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc, int i) {
     // Let state[j] be x and state[j+1] be y
     int toAdd = rot(state[j + 1], shiftOne);
-    map.put(String.valueOf(j) + i + "SC", state);
+
+    map.put(String.valueOf(j) + i + "SC", Arrays.copyOf(state, state.length));
+
     while (!map.containsKey(String.valueOf(j) + i + "MS")) {
     }
-    addArithmeticToBinary(toAdd, map.get(String.valueOf(j) + i + "MS"), j);
+    int[] otherShares = map.get(String.valueOf(j) + i + "MS");
+    //toAdd = binaryToArithmetic(toAdd, rot(otherShares[j + 1], shiftOne));
+    map.put(String.valueOf(j) + i + "toAdd", new int[]{toAdd});
+
+    //addArithmeticToBinary(toAdd, otherShares, j);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
   }
@@ -97,8 +104,10 @@ public final class SparkleCopy {
   void addArithmeticToBinary(int toAdd, int[] otherShares, int j) {
     //Convert to arithmetic
     state[j] = binaryToArithmetic(state[j], otherShares[j]);
+    map.put(String.valueOf(j) + 0 + "SCADDD", Arrays.copyOf(state, state.length));
 
     state[j] += toAdd;
+    map.put(String.valueOf(j) + 0 + "SCADD", Arrays.copyOf(state, state.length));
     //Convert to binary
     state[j] = arithmeticToBinary(state[j], otherShares[j]);
   }

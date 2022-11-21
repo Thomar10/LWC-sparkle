@@ -81,53 +81,9 @@ public final class Sparkle {
     }
   }
 
-  private static void sparkleInverse(int[] state, int brans, int steps) {
-    int rc, tmpx, tmpy, xb1, yb1;
-
-    for (int i = steps - 1; i >= 0; i--) {
-      tmpx = tmpy = 0;
-      xb1 = state[brans - 2];
-      yb1 = state[brans - 1];
-      for (int j = brans - 2; j > 0; j -= 2) {
-        tmpx ^= (state[j] = state[j + brans]);
-        state[j + brans] = state[j - 2];
-        state[j + 1] = state[j + brans + 1];
-        tmpy ^= state[j + 1];
-        state[j + brans + 1] = state[j - 1];
-      }
-      tmpx ^= (state[0] = state[brans]);
-      state[brans] = xb1;
-      tmpy ^= (state[1] = state[brans + 1]);
-      state[brans + 1] = yb1;
-      tmpx = ell(tmpx);
-      tmpy = ell(tmpy);
-      for (int j = brans - 2; j >= 0; j -= 2) {
-        state[j + brans] ^= (tmpy ^ state[j]);
-        state[j + brans + 1] ^= (tmpx ^ state[j + 1]);
-      }
-
-      for (int j = 0; j < 2 * brans; j += 2) {
-        rc = rcon[j >> 1];
-        alzetteRoundInverse(state, j, 16, 24, rc);
-        alzetteRoundInverse(state, j, 31, 0, rc);
-        alzetteRoundInverse(state, j, 17, 17, rc);
-        alzetteRoundInverse(state, j, 24, 31, rc);
-      }
-      // Add round constant
-      state[1] ^= rcon[i % maxBranches];
-      state[3] ^= i;
-    }
-  }
-
-  static void alzetteRoundInverse(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
-    state[j] ^= rc;
-    state[j + 1] ^= rot(state[j], shiftOne);
-    state[j] -= rot(state[j + 1], shiftTwo);
-  }
-
   static void alzetteRound(int[] state, int j, int shiftOne, int shiftTwo, int rc) {
     // Let state[j] be x and state[j+1] be y
-    state[j] += rot(state[j + 1], shiftOne);
+    // state[j] += rot(state[j + 1], shiftOne);
     state[j + 1] ^= rot(state[j], shiftTwo);
     state[j] ^= rc;
   }

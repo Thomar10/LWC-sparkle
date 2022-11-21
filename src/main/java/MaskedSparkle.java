@@ -32,8 +32,8 @@ public final class MaskedSparkle {
 
   private void sparkle(int[] state, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
-    for (int i = 0; i < 1; i++) {
-      for (int j = 0; j < 1; j += 2) {
+    for (int i = 0; i < steps; i++) {
+      for (int j = 0; j < 2*brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc, i);
         alzetteRound(state, j, 17, 17, rc, i);
@@ -67,7 +67,7 @@ public final class MaskedSparkle {
     map.put(String.valueOf(j) + i + "MS", state);
     while (!map.containsKey(String.valueOf(j) + i + "SC")) {
     }
-    addArithmeticToBinary(toAdd, map.get(String.valueOf(j) + i + "SC"), j);
+    //addArithmeticToBinary(toAdd, map.get(String.valueOf(j) + i + "SC"), j);
     state[j + 1] ^= rot(state[j], shiftTwo);
   }
 

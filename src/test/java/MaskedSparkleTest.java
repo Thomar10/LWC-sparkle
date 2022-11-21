@@ -10,14 +10,13 @@ public class MaskedSparkleTest {
   @RepeatedTest(1)
   void maskedSparkle256Test() throws InterruptedException {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-    new ThreadedMaskedSparkle().sparkle256(states.stateNormal2);
+    new ThreadedMaskedSparkle().sparkle256(states.copy);
     Sparkle.sparkle256(states.stateNormal);
-    System.out.println(Arrays.toString(states.stateNormal2));
-    Assertions.assertThat(states.stateNormal).isEqualTo(states.stateNormal2);
+    System.out.println(Arrays.toString(states.copy));
+    Assertions.assertThat(states.stateNormal).isEqualTo(states.copy);
   }
 
-
-  record RandomMaskedState(int[] stateNormal, int[] stateNormal2) {
+  record RandomMaskedState(int[] stateNormal, int[] copy) {
 
     static RandomMaskedState generateRandomMaskedState() {
 
