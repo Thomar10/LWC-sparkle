@@ -1,10 +1,9 @@
-import java.util.Arrays;
 import java.util.Random;
 
 /**
  * Sparkle permutation.
  */
-public final class SparkleMaskedNoThread {
+public final class SparkleMaskedSingleThread {
   static Random random = new Random();
   public static final int maxBranches = 8;
   private static final int[] rcon =
@@ -20,18 +19,38 @@ public final class SparkleMaskedNoThread {
       };
 
   public static void sparkle256(int[] state) {
+    runSparkle(state, 4, 10);
+  }
+
+  public static void sparkle256Slim(int[] state) {
+    runSparkle(state, 4, 7);
+  }
+
+  public static void sparkle384(int[] state) {
+    runSparkle(state, 6, 11);
+  }
+
+  public static void sparkle384Slim(int[] state) {
+    runSparkle(state, 6, 7);
+  }
+
+  public static void sparkle512(int[] state) {
+    runSparkle(state, 8, 12);
+  }
+
+  public static void sparkle512Slim(int[] state) {
+    runSparkle(state, 8, 8);
+  }
+
+  public static void runSparkle(int[] state, int brans, int steps) {
     int[] share0 = new int[state.length];
     int[] share1 = new int[state.length];
 
     generateRandomMaskedState(state, share0, share1);
 
-    sparkle(share0, share1, 4, 10);
-
-    System.out.println(Arrays.toString(share0));
-    System.out.println(Arrays.toString(share1));
+    sparkle(share0, share1, brans, steps);
 
     recoverState(state, share0, share1);
-
   }
 
   static void generateRandomMaskedState(int[] state, int[] share0, int[] share1) {
@@ -60,22 +79,21 @@ public final class SparkleMaskedNoThread {
     return rot(x ^ (x << 16), 16);
   }
 
-  private static void sparkle(int[] state, int[] mask, int brans, int steps) {
+  private static void sparkle(int[] share0, int[] share1, int brans, int steps) {
     int rc, tmpx, tmpy, x0, y0;
     for (int i = 0; i < steps; i++) {
-      state[1] ^= rcon[i % maxBranches];
-      state[3] ^= i;
-      mask[1] ^= rcon[i % maxBranches];
-      mask[3] ^= i;
+      share0[1] ^= rcon[i % maxBranches];
+      share0[3] ^= i;
+
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
-        //alzetteRound(state, mask, j, 31, 24, rc);
-        //alzetteRound(state, mask, j, 17, 17, rc);
-        //alzetteRound(state, mask, j, 0, 31, rc);
-        //alzetteRound(state, mask, j, 24, 16, rc);
+        alzetteRound(share0, share1, j, 31, 24, rc);
+        alzetteRound(share0, share1, j, 17, 17, rc);
+        alzetteRound(share0, share1, j, 0, 31, rc);
+        alzetteRound(share0, share1, j, 24, 16, rc);
       }
-      BinarySparkleOperations(state, brans);
-      BinarySparkleOperations(mask, brans);
+      BinarySparkleOperations(share0, brans);
+      BinarySparkleOperations(share1, brans);
     }
   }
 
@@ -104,36 +122,31 @@ public final class SparkleMaskedNoThread {
     state[brans + 1] = y0;
   }
 
-  static void alzetteRound(int[] state, int[] mask, int j, int shiftOne, int shiftTwo, int rc) {
+  static void alzetteRound(int[] share0, int[] share1, int j, int shiftOne, int shiftTwo, int rc) {
     // Let state[j] be x and state[j+1] be y
     //state[j] += rot(state[j + 1], shiftOne);
 
-    int toAddState = rot(state[j + 1], shiftOne);
-    int toAddMask = rot(mask[j + 1], shiftOne);
+    int toAddShare0 = rot(share0[j + 1], shiftOne);
+    int toAddShare1 = rot(share1[j + 1], shiftOne);
 
+    addArithmeticToBinary(share0, toAddShare0, toAddShare1, share1[j], j);
 
-    //Convert state to arith
-    state[j] = binaryToArithmetic(state[j], mask[j]);
-    toAddState = binaryToArithmetic(toAddState, toAddMask);
+    share0[j + 1] ^= rot(share0[j], shiftTwo);
+    share0[j] ^= rc;
 
-    //Update state
-    state[j] += toAddState + toAddMask;
-
-    //Update Mask
-    state[j] = arithmeticToBinary(state[j], mask[j]);
-    mask[j] += toAddMask;
-
-
-
-
-    //Binary operations
-    state[j + 1] ^= rot(state[j], shiftTwo);
-    state[j] ^= rc;
-
-    mask[j + 1] ^= rot(mask[j], shiftTwo);
-    mask[j] ^= rc;
+    share1[j + 1] ^= rot(share1[j], shiftTwo);
   }
 
+  static void addArithmeticToBinary(int[] state, int toAdd, int otherToAdd, int otherShares, int j) {
+    //Convert to arithmetic
+    state[j] = binaryToArithmetic(state[j], otherShares);
+    int toAddArith = binaryToArithmetic(toAdd, otherToAdd);
+
+    state[j] += toAddArith + otherToAdd;
+
+    //Convert to binary
+    state[j] = arithmeticToBinary(state[j], otherShares);
+  }
 
   static int binaryToArithmetic(int x, int r) {
     int gamma = random.nextInt(Integer.MAX_VALUE);
