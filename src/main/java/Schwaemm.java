@@ -20,7 +20,6 @@ public final class Schwaemm {
 
   private final SchwaemmType type;
 
-
   public Schwaemm(SchwaemmType type) {
     int SCHWAEMM_KEY_LEN;
     int SCHWAEMM_NONCE_LEN;
@@ -102,7 +101,6 @@ public final class Schwaemm {
       decrypt(state, message, cipher);
     }
     finalize(state, key);
-
     verifyTag(
         state,
         ConversionUtil.createIntArrayFromBytes(
@@ -262,7 +260,7 @@ public final class Schwaemm {
    * Absorbs the data into the state.
    *
    * @param state state
-   * @param data  data to be absorbed
+   * @param data data to be absorbed
    */
   void associateData(int[] state, byte[] data) {
     int dataSize = data.length;

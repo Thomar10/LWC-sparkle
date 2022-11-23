@@ -10,7 +10,6 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return buffer;
   }
 
-
   static String printBytesAsStringLength(byte[] bytes, int length) {
     StringBuilder s = new StringBuilder();
     for (int i = 0; i < length; i++) {
@@ -23,8 +22,9 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
     // Tests in C only goes up to 32 bits.
-    int randomInt = random.nextInt(32 - minLength) + minLength;
-    int randomMsg = random.nextInt(32 - minLength) + minLength;
+    // TODO REVERT BACK!
+    int randomInt = 32;// random.nextInt(32 - minLength) + minLength;
+    int randomMsg = 32;// random.nextInt(32 - minLength) + minLength;
     byte[] associate = new byte[randomInt];
     byte[] message = new byte[randomMsg];
     random.nextBytes(associate);
@@ -47,6 +47,86 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   public static SchwaemmHelper prepareTest(SchwaemmType type) {
     return prepareTest(type, 0);
+  }
+
+  public static MaskedData convertDataToMasked(SchwaemmHelper data, int order) {
+    int[][] maskedState = maskIntArray(data.stateC, order);
+
+    return new MaskedData(maskByteArrays(data.key, 2), maskByteArrays(data.nonce, 2),
+        maskByteArrays(data.associate, 2), maskByteArrays(data.message, 2),
+        maskByteArrays(data.cipherC, 2), maskedState);
+  }
+
+  public static MaskedData convertDataFirstOrder(SchwaemmHelper data) {
+    int[][] maskedState = maskIntArray(data.stateC, 2);
+
+    return new MaskedData(maskByteFirstOrder(data.key), maskByteFirstOrder(data.nonce),
+        maskByteFirstOrder(data.associate), maskByteFirstOrder(data.message),
+        maskByteFirstOrder(data.cipherC), maskedState);
+  }
+
+  public static int[][] maskIntArray(int[] ints, int order) {
+    int[][] maskedState = new int[order][ints.length];
+    for (int j = 0; j < ints.length; j++) {
+      int number = random.nextInt(Integer.MAX_VALUE);
+      maskedState[0][j] = number;
+    }
+    for (int j = 0; j < ints.length; j++) {
+      maskedState[1][j] = ints[j] ^ maskedState[0][j];
+    }
+    // TODO HIGHER ORDER
+    for (int i = 1; i < order; i++) {
+
+    }
+    return maskedState;
+  }
+
+  static int[] recoverState(int[][] state) {
+    int[] result = new int[state[0].length];
+    for (int i = 0; i < state[0].length; i++) {
+      result[i] = state[0][i] ^ state[1][i];
+    }
+    return result;
+  }
+
+  public static SchwaemmHelper recoverSchwaemm(MaskedData data) {
+
+    return new SchwaemmHelper(recoverByteArrays(data.key), recoverByteArrays(data.nonce),
+        recoverByteArrays(data.associate), recoverByteArrays(data.message), null,
+        recoverByteArrays(data.cipher), null, recoverState(data.state));
+  }
+
+  public static byte[][] maskByteFirstOrder(byte[] bytes) {
+    return maskByteArrays(bytes, 2);
+  }
+
+  private static byte[][] maskByteArrays(byte[] bytes, int order) {
+    byte[][] maskedBytes = new byte[order][];
+    int[] intAsBytes = ConversionUtil.createIntArrayFromBytes(bytes, bytes.length / 4);;
+    int[][] maskedInts = maskIntArray(intAsBytes, order);
+    for (int i = 0; i < order; i++) {
+      byte[] buffer = new byte[bytes.length];
+      ConversionUtil.populateByteArrayFromInts(maskedInts[i], buffer, 0, buffer.length, 0);
+      maskedBytes[i] = buffer;
+    }
+    return maskedBytes;
+  }
+
+  public static byte[] recoverByteArrays(byte[][] bytes) {
+    int[][] maskedInts = new int[bytes.length][bytes[0].length / 4];
+    for (int i = 0; i < bytes.length; i++) {
+      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i], bytes[0].length / 4);
+    }
+    int[] recoveredInts = recoverState(maskedInts);
+    byte[] recoveredBytes = new byte[bytes[0].length];
+    ConversionUtil.populateByteArrayFromInts(recoveredInts, recoveredBytes, 0,
+        recoveredBytes.length, 0);
+    return recoveredBytes;
+  }
+
+  public record MaskedData(byte[][] key, byte[][] nonce, byte[][] associate, byte[][] message,
+                           byte[][] cipher, int[][] state) {
+
   }
 }
 

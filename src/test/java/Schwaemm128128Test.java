@@ -66,7 +66,7 @@ public final class Schwaemm128128Test {
     schwaemmC.generateTag(cState, cTag);
 
     Assertions.assertThat(cState).isEqualTo(state);
-    // the java code expects tag to have length message tag length. We need to remove message()ength after
+    // the java code expects tag to have length message tag length. We need to remove message length after
     byte[] trueJavaTag = new byte[TAG_BYTES];
     System.arraycopy(tag, data.message().length, trueJavaTag, 0, TAG_BYTES);
     Assertions.assertThat(cTag).isEqualTo(trueJavaTag);
