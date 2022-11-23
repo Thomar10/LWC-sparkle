@@ -1,12 +1,17 @@
 import java.util.Random;
 
+/***
+ * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf
+ */
 public class BooleanAddition {
 
-    public static void SafeBitFullAdder(int x, int y, int p, int q){
-
-    }
-
-    public static int[] SecAnd(int[] x, int[] y){
+    /***
+     * Returns shares of z, such that z = x & y
+     * @param x shares of x
+     * @param y shares of y
+     * @return shares of z
+     */
+    public static int[] secureBooleanAnd(int[] x, int[] y){
         Random random = new Random();
         int n = x.length;
         int[][] r = new int[n][n];
@@ -27,6 +32,41 @@ public class BooleanAddition {
                     z[i] = z[i] ^ r[i][j];
                 }
             }
+        }
+
+        return z;
+    }
+
+    /***
+     * Returns shares of z, such that z = x + y
+     * @param x shares of x
+     * @param y shares of y
+     * @return shares of z
+     */
+    public static int[] secureBooleanAdditionGoubin(int[] x, int[] y){
+        int n = x.length;
+        int k = 32; //bit length
+
+        int[] w = secureBooleanAnd(x, y);
+        int[] u = new int[n];
+        int[] a = new int[n];
+
+        for(int i = 0; i < n; i++){
+            a[i] = x[i] ^ y[i];
+        }
+
+        for(int j = 0; j < k; j++){
+            int[] ua = secureBooleanAnd(u, a);
+
+            for(int i = 0; i < n; i++){
+                u[i] = 2 * (ua[i] ^ w[i]); //Maybe wrong as ints are not unsigned
+            }
+        }
+
+        int[] z = new int[n];
+
+        for(int i = 0; i < n; i++){
+            z[i] = x[i] ^ y[i] ^ u[i];
         }
 
         return z;
