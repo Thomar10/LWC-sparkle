@@ -1,18 +1,15 @@
-import java.util.Random;
-
 /***
  * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf
  */
 public class BooleanAddition {
 
     /***
-     * Returns shares of z, such that z = x & y
+     * Takes as input shares of x and shares of y and returns shares of z, such that z = x & y
      * @param x shares of x
      * @param y shares of y
      * @return shares of z
      */
     public static int[] secureBooleanAnd(int[] x, int[] y){
-        Random random = new Random();
         int n = x.length;
         int[][] r = new int[n][n];
 
@@ -38,7 +35,7 @@ public class BooleanAddition {
     }
 
     /***
-     * Returns shares of z, such that z = x + y
+     * Takes as input shares of x and shares of y and returns shares of z, such that z = x + y
      * @param x shares of x
      * @param y shares of y
      * @return shares of z
