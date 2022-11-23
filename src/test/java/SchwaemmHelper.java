@@ -22,9 +22,8 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
     // Tests in C only goes up to 32 bits.
-    // TODO REVERT BACK!
-    int randomInt = 32;// random.nextInt(32 - minLength) + minLength;
-    int randomMsg = 32;// random.nextInt(32 - minLength) + minLength;
+    int randomInt = random.nextInt(32 - minLength) + minLength;
+    int randomMsg = random.nextInt(32 - minLength) + minLength;
     byte[] associate = new byte[randomInt];
     byte[] message = new byte[randomMsg];
     random.nextBytes(associate);
@@ -102,7 +101,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   private static byte[][] maskByteArrays(byte[] bytes, int order) {
     byte[][] maskedBytes = new byte[order][];
-    int[] intAsBytes = ConversionUtil.createIntArrayFromBytes(bytes, bytes.length / 4);;
+    int[] intAsBytes = ConversionUtil.createIntArrayFromBytes(bytes, (bytes.length + 4 - 1) / 4);
     int[][] maskedInts = maskIntArray(intAsBytes, order);
     for (int i = 0; i < order; i++) {
       byte[] buffer = new byte[bytes.length];
@@ -113,9 +112,13 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   }
 
   public static byte[] recoverByteArrays(byte[][] bytes) {
-    int[][] maskedInts = new int[bytes.length][bytes[0].length / 4];
+    // TODO FIX if length of bytes[i] == 0 better
+    if (bytes[0].length == 0) {
+      return new byte[0];
+    }
+    int[][] maskedInts = new int[bytes.length][(bytes[0].length - 1) / 4 + 1];
     for (int i = 0; i < bytes.length; i++) {
-      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i], bytes[0].length / 4);
+      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i], (bytes[0].length - 1) / 4 + 1);
     }
     int[] recoveredInts = recoverState(maskedInts);
     byte[] recoveredBytes = new byte[bytes[0].length];

@@ -94,7 +94,7 @@ public final class SchwaemmMasked {
     int[][] state = new int[key.length][STATE_WORDS];
     int cipherTextLength = cipher[0].length - TAG_BYTES;
     initialize(state, key, nonce);
-    if (assoData.length > 0) {
+    if (assoData[0].length > 0) {
       associateData(state, assoData);
     }
     byte[][] message = new byte[cipher.length][cipherTextLength];
@@ -199,10 +199,10 @@ public final class SchwaemmMasked {
       byte[][] nonce) {
     int[][] state = new int[nonce.length][STATE_WORDS];
     initialize(state, key, nonce);
-    if (assoData.length > 0) {
+    if (assoData[0].length > 0) {
       associateData(state, assoData);
     }
-    if (message.length > 0) {
+    if (message[0].length > 0) {
       encrypt(state, message, cipher);
     }
     int[][] intKey = new int[key.length][];
