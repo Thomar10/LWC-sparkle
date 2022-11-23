@@ -1,13 +1,13 @@
 import java.util.Arrays;
 import java.util.Random;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 // TODO DELETE ONLY USED FOR EASIER 'DEBUGGING'
 public class ABOXTest {
 
   static Random random = new Random();
-
 
   @Test
   public void conversion() {
@@ -31,7 +31,7 @@ public class ABOXTest {
     System.out.println("Answer after add: " + states.stateNormal[0]);
   }
 
-  @Test
+  @RepeatedTest(100)
   public void abox() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[] share0 = generateRandomMaskedState(states.copy());
@@ -39,11 +39,11 @@ public class ABOXTest {
     //System.out.println(Arrays.toString(alzetteRoundSparkle(states.stateNormal, 0, 31)));
     alzetteRoundSparkle(states.stateNormal, 0, 31);
     //System.out.println(Arrays.toString(alzetteRoundCopy(share0, 0, 31)));
-    alzetteRoundCopy(share0, 0, 31);
     //System.out.println(Arrays.toString(alzetteRoundMasked(states.copy, 0, 31)));
+    int[] copycopy = states.copy;
     alzetteRoundMasked(states.copy, share0, 0, 31);
+    alzetteRoundCopy(share0, copycopy, 0, 31);
     Assertions.assertThat(share0[0] ^ states.copy[0]).isEqualTo(states.stateNormal[0]);
-
   }
 
   public static int binaryToArithmetic(int x, int r) {
@@ -81,33 +81,34 @@ public class ABOXTest {
   static int[] alzetteRoundSparkle(int[] state, int j, int shiftOne) {
     // Let state[j] be x and state[j+1] be y
     int toAdd = rot(state[j + 1], shiftOne);
-    System.out.println("Sparkle to add: " + toAdd);
-    System.out.println("Sparkle state J: " + state[j]);
     state[j] = state[j] + toAdd;
-    System.out.println("Sparkle state J: " + state[j]);
     return state;
   }
 
-  static int[] alzetteRoundCopy(int[] state, int j, int shiftOne) {
-    // Let state[j] be x and state[j+1] be y
-    int[] share = new int[]{574963334, 952629791};
-    //state[j] ^= rot(state[j + 1], shiftOne);
+  static int[] alzetteRoundCopy(int[] state, int[] theOtherShare, int j, int shiftOne) {
+
+    int toAddBin = rot(state[j + 1], shiftOne);
+
+    int stateJ = binaryToArithmetic(state[j], theOtherShare[j]);
+    state[j] = stateJ + toAddBin;// + shareRot;
+
+    state[j] = arithmeticToBinary(state[j], theOtherShare[j]);
+
     return state;
   }
-
 
   static int[] alzetteRoundMasked(int[] state, int[] theOtherShare, int j, int shiftOne) {
     // Let state[j] be x and state[j+1] be y
 
-    int shareRot = rot(theOtherShare[j+1], shiftOne);
-    int toAdd = binaryToArithmetic(rot(state[j + 1], shiftOne), shareRot);
-    System.out.println("Masked toAdd " + (toAdd + shareRot));
+    int shareRot = rot(theOtherShare[j + 1], shiftOne);
+    int toAddBin = rot(state[j + 1], shiftOne);
+    int toAdd = binaryToArithmetic(toAddBin, shareRot);
+
     int stateJ = binaryToArithmetic(state[j], theOtherShare[j]);
-    System.out.println("Masked state[j] " + (stateJ + theOtherShare[j]));
-    state[j] =  stateJ + toAdd + shareRot;
+    state[j] = stateJ + toAdd;// + shareRot;
 
     state[j] = arithmeticToBinary(state[j], theOtherShare[j]);
-    System.out.println("Masked state[j] " + (state[j] ^ theOtherShare[j]));
+
     return state;
   }
 

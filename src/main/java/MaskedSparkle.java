@@ -35,10 +35,10 @@ public final class MaskedSparkle {
     for (int i = 0; i < steps; i++) {
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
-        alzetteRound(state, j, 31, 24, rc, i);
-        alzetteRound(state, j, 17, 17, rc, i);
-        alzetteRound(state, j, 0, 31, rc, i);
-        alzetteRound(state, j, 24, 16, rc, i);
+        alzetteRound2(state, j, 31, 24, rc, i);
+        alzetteRound2(state, j, 17, 17, rc, i);
+        alzetteRound2(state, j, 0, 31, rc, i);
+        alzetteRound2(state, j, 24, 16, rc, i);
       }
       tmpx = x0 = state[0];
       tmpy = y0 = state[1];
@@ -67,5 +67,52 @@ public final class MaskedSparkle {
     map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "toAdd", toAdd);
     map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "share", state[j]);
     state[j + 1] ^= rot(state[j], shiftTwo);
+  }
+
+  void alzetteRound2(int[] state, int j, int shiftOne, int shiftTwo, int rc, int i) {
+    // Let state[j] be x and state[j+1] be y
+    int toAdd = rot(state[j + 1], shiftOne);
+    map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "toAdd", toAdd);
+    String shareId = String.valueOf(j) + i + shiftOne + shiftTwo + "shareS";
+    while (!map.containsKey(shareId)) {
+    }
+    int share = map.get(shareId);
+    int stateJ = binaryToArithmetic(state[j], share);
+    state[j] = stateJ + toAdd;
+    state[j] = arithmeticToBinary(state[j], share);
+    map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "share", state[j]);
+    state[j + 1] ^= rot(state[j], shiftTwo);
+  }
+
+  public int binaryToArithmetic(int x, int r) {
+    long gamma = random.nextInt(Integer.MAX_VALUE);
+    long T = x ^ gamma;
+    T = T - gamma;
+    T = T ^ x;
+    gamma = gamma ^ r;
+    long A = x ^ gamma;
+    A = A - gamma;
+    return (int) (A ^ T);
+  }
+
+  public int arithmeticToBinary(int A, int r) {
+    int gamma = random.nextInt(Integer.MAX_VALUE);
+    int T = 2 * gamma;
+    int x = gamma ^ r;
+    int omega = gamma & x;
+    x = T ^ A;
+    gamma = gamma ^ x;
+    gamma = gamma & r;
+    omega = omega ^ gamma;
+    gamma = T & A;
+    omega = omega ^ gamma;
+    for (int k = 1; k < 32; k++) {
+      gamma = T & r;
+      gamma = gamma ^ omega;
+      T = T & A;
+      gamma = gamma ^ T;
+      T = 2 * gamma;
+    }
+    return x ^ T;
   }
 }

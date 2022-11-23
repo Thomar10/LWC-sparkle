@@ -46,10 +46,10 @@ public final class SparkleCopy {
       state[3] ^= i;
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
-        alzetteRound(state, j, 31, 24, rc, i);
-        alzetteRound(state, j, 17, 17, rc, i);
-        alzetteRound(state, j, 0, 31, rc, i);
-        alzetteRound(state, j, 24, 16, rc, i);
+        alzetteRound2(state, j, 31, 24, rc, i);
+        alzetteRound2(state, j, 17, 17, rc, i);
+        alzetteRound2(state, j, 0, 31, rc, i);
+        alzetteRound2(state, j, 24, 16, rc, i);
       }
       tmpx = x0 = state[0];
       tmpy = y0 = state[1];
@@ -90,6 +90,25 @@ public final class SparkleCopy {
     state[j] ^= rc;
   }
 
+  void alzetteRound2(int[] state, int j, int shiftOne, int shiftTwo, int rc, int i) {
+    // Let state[j] be x and state[j+1] be y
+    int toAdd = rot(state[j + 1], shiftOne);
+
+    String toAddId = String.valueOf(j) + i + shiftOne + shiftTwo + "toAdd";
+    String shareId = String.valueOf(j) + i + shiftOne + shiftTwo + "share";
+    map.put(String.valueOf(j) + i + shiftOne + shiftTwo + "shareS", state[j]);
+    while (!map.containsKey(toAddId)) {
+    }
+    while (!map.containsKey(shareId)) {
+    }
+    int otherToAdd = map.get(toAddId);
+    int share = map.get(shareId);
+
+    addArithmeticToBinary2(toAdd, otherToAdd, share, j);
+    state[j + 1] ^= rot(state[j], shiftTwo);
+    state[j] ^= rc;
+  }
+
   public int binaryToArithmetic(int x, int r) {
     int gamma = random.nextInt(Integer.MAX_VALUE);
     int T = x ^ gamma;
@@ -107,6 +126,17 @@ public final class SparkleCopy {
     int toAddArith = binaryToArithmetic(toAdd, otherToAdd);
 
     state[j] += toAddArith + otherToAdd;
+
+    //Convert to binary
+    state[j] = arithmeticToBinary(state[j], otherShares);
+  }
+
+  void addArithmeticToBinary2(int toAdd, int otherToAdd, int otherShares, int j) {
+    //Convert to arithmetic
+    int stateJ = binaryToArithmetic(state[j], otherShares);
+    int toAddArith = binaryToArithmetic(toAdd, otherToAdd);
+
+    state[j] = stateJ + toAddArith;
 
     //Convert to binary
     state[j] = arithmeticToBinary(state[j], otherShares);
