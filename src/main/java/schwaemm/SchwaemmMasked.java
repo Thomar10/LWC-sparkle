@@ -1,5 +1,9 @@
+package schwaemm;
+
 import java.util.Arrays;
 import java.util.function.Consumer;
+import sparkle.MaskedSparkleFirstOrder;
+import util.ConversionUtil;
 
 public final class SchwaemmMasked {
 
@@ -72,7 +76,7 @@ public final class SchwaemmMasked {
         this.sparkle = MaskedSparkleFirstOrder::sparkle512;
         this.type = type;
       }
-      default -> throw new RuntimeException("Unknown Schwaemm configuration!");
+      default -> throw new RuntimeException("Unknown schwaemm.Schwaemm configuration!");
     }
     KEY_WORDS = SCHWAEMM_KEY_LEN / 32;
     KEY_BYTES = SCHWAEMM_KEY_LEN / 8;

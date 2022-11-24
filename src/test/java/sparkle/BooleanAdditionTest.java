@@ -1,3 +1,5 @@
+package sparkle;
+
 import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;

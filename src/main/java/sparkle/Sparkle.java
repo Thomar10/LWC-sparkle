@@ -1,5 +1,7 @@
+package sparkle;
+
 /**
- * Sparkle permutation.
+ * sparkle.Sparkle permutation.
  */
 public final class Sparkle {
 

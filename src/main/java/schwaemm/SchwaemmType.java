@@ -1,5 +1,7 @@
+package schwaemm;
+
 /**
- * Schwaemm type and helper functions for the type.
+ * schwaemm.Schwaemm type and helper functions for the type.
  */
 public enum SchwaemmType {
   S128128("128128"), S192192("192192"), S256128("256128"), S256256("256256");

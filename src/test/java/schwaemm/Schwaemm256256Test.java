@@ -1,3 +1,5 @@
+package schwaemm;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,20 +8,20 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import util.ConversionUtil;
 
-public final class Schwaemm256128Test {
+public final class Schwaemm256256Test {
 
-  private static final int TAG_BYTES = SchwaemmType.S256128.getTagBytes();
-
-  private static final int STATE_WORDS = SchwaemmType.S256128.getStateSize();
-  private final SchwaemmLib schwaemmC = new SchwaemmLib(SchwaemmType.S256128);
-  private final Schwaemm schwaemmJava = new Schwaemm(SchwaemmType.S256128);
+  private static final int TAG_BYTES = SchwaemmType.S256256.getTagBytes();
+  private static final int STATE_WORDS = SchwaemmType.S256256.getStateSize();
+  private final SchwaemmLib schwaemmC = new SchwaemmLib(SchwaemmType.S256256);
+  private final Schwaemm schwaemmJava = new Schwaemm(SchwaemmType.S256256);
 
   @RepeatedTest(50)
   void initializeTest() {
     int[] stateC = new int[STATE_WORDS];
     int[] stateJ = new int[STATE_WORDS];
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     schwaemmC.initialize(stateC, data.key(), data.nonce());
     schwaemmJava.initialize(stateJ, data.key(), data.nonce());
     Assertions.assertThat(stateJ).isEqualTo(stateC);
@@ -27,7 +29,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void finalizeCall() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     int[] stateC = data.stateC();
     int[] stateJ = data.stateJ();
 
@@ -39,7 +41,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void stageWithFinalizeCall() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] stateC = new int[STATE_WORDS];
     int[] stateJ = new int[STATE_WORDS];
 
@@ -56,7 +58,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void generateTag() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     int[] cState = data.stateC();
     int[] state = data.stateJ();
 
@@ -74,7 +76,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void stageWithGenerateTag() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] cState = new int[STATE_WORDS];
     byte[] cCipherWithTag = new byte[data.message().length + TAG_BYTES];
     schwaemmC.stagesWithGenerateTag(cState, data.key(), data.nonce(), data.associate(),
@@ -92,7 +94,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void checkSchwaemmEncrypt() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     schwaemmC.encryptAndTag(data.cipherC(), data.message(), data.message().length, data.associate(),
         data.associate().length, data.nonce(), data.key());
     schwaemmJava.encryptAndTag(data.message(), data.cipherJava(), data.associate(), data.key(),
@@ -103,13 +105,12 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void encryptAndDecryptC() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     schwaemmC.encryptAndTag(data.cipherC(), data.message(), data.message().length, data.associate(),
         data.associate().length, data.nonce(), data.key());
     byte[] messageBack = new byte[data.message().length];
     schwaemmC.decryptAndVerify(messageBack, data.cipherC(), data.cipherC().length, data.associate(),
         data.associate().length, data.nonce(), data.key());
-
     schwaemmJava.encryptAndTag(data.message(), data.cipherJava(), data.associate(), data.key(),
         data.nonce());
     byte[] messageJava = schwaemmJava.decryptAndVerify(data.cipherJava(), data.associate(),
@@ -121,7 +122,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void encryptAndDecrypt() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] state = new int[STATE_WORDS];
     schwaemmJava.initialize(state, data.key(), data.nonce());
     schwaemmJava.associateData(state, data.associate());
@@ -139,7 +140,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void processPlaintext() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] state = data.stateJ();
     int[] cState = data.stateC();
 
@@ -152,7 +153,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void stagesWithProcessPlaintext() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] state = new int[STATE_WORDS];
     int[] cState = new int[STATE_WORDS];
 
@@ -169,7 +170,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(20)
   void processAssociateData() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] state = data.stateJ();
     int[] cState = data.stateC();
     schwaemmC.processAssocData(cState, data.associate(), data.associate().length);
@@ -180,7 +181,7 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(20)
   void stageWithProcessAssociateData() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     int[] state = new int[STATE_WORDS];
     int[] cState = new int[STATE_WORDS];
     schwaemmC.stagesWithProcessAssocData(cState, data.key(), data.nonce(), data.associate(),
@@ -193,20 +194,20 @@ public final class Schwaemm256128Test {
 
   @RepeatedTest(50)
   void verifyTagFailsOnRandomInput() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256);
     byte[] randomCipher = new byte[TAG_BYTES];
     new Random().nextBytes(randomCipher);
     int res = schwaemmC.verifyTag(data.stateJ(), randomCipher);
     Assertions.assertThat(res).isEqualTo(-1);
     Assertions.assertThatThrownBy(() -> schwaemmJava.verifyTag(data.stateJ(),
             ConversionUtil.createIntArrayFromBytes(randomCipher,
-                SchwaemmType.S256128.getVerifyTagLength()))).isInstanceOf(RuntimeException.class)
+                SchwaemmType.S256256.getStateSize() / 2))).isInstanceOf(RuntimeException.class)
         .hasMessage("Could not verify tag!");
   }
 
   @RepeatedTest(50)
   void processCipherText() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256128, 1);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S256256, 1);
     byte[] randomCipher = new byte[data.message().length + TAG_BYTES];
     new Random().nextBytes(randomCipher);
 
@@ -219,9 +220,9 @@ public final class Schwaemm256128Test {
   void genkatAeadTest() throws IOException {
     BufferedReader buffer = new BufferedReader(
         new InputStreamReader(Schwaemm256256Test.class.getResourceAsStream(
-            "/schwaemm/LWC_AEAD_KAT_128_256.txt")));
-    byte[] key = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S256128.getKeySize()]);
-    byte[] nonce = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S256128.getNonceSize()]);
+            "/schwaemm/LWC_AEAD_KAT_256_256.txt")));
+    byte[] key = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S256256.getKeySize()]);
+    byte[] nonce = SchwaemmHelper.initBuffer(new byte[SchwaemmType.S256256.getNonceSize()]);
     byte[] messageToCopy = SchwaemmHelper.initBuffer(new byte[32]);
     byte[] message2;
     byte[] associateToCopy = SchwaemmHelper.initBuffer(new byte[32]);
@@ -232,7 +233,7 @@ public final class Schwaemm256128Test {
     int adlen;
     String line;
     for (mlen = 0; mlen <= 32; mlen++) {
-      byte[] cipher = new byte[mlen + SchwaemmType.S256128.getTagBytes()];
+      byte[] cipher = new byte[mlen + SchwaemmType.S256256.getTagBytes()];
       byte[] message = Arrays.copyOfRange(messageToCopy, 0, mlen);
       for (adlen = 0; adlen <= 32; adlen++) {
         line = buffer.readLine();
@@ -242,12 +243,12 @@ public final class Schwaemm256128Test {
 
         line = buffer.readLine();
         String keyGotten = String.format("Key = %s",
-            SchwaemmHelper.printBytesAsStringLength(key, SchwaemmType.S256128.getKeySize()));
+            SchwaemmHelper.printBytesAsStringLength(key, SchwaemmType.S256256.getKeySize()));
         Assertions.assertThat(line).isEqualTo(keyGotten);
 
         line = buffer.readLine();
         String nonceGotten = String.format("Nonce = %s",
-            SchwaemmHelper.printBytesAsStringLength(nonce, SchwaemmType.S256128.getNonceSize()));
+            SchwaemmHelper.printBytesAsStringLength(nonce, SchwaemmType.S256256.getNonceSize()));
         Assertions.assertThat(line).isEqualTo(nonceGotten);
 
         line = buffer.readLine();
@@ -265,7 +266,7 @@ public final class Schwaemm256128Test {
         line = buffer.readLine();
         String cipherGotten = String.format("CT = %s",
             SchwaemmHelper.printBytesAsStringLength(cipher,
-                mlen + SchwaemmType.S256128.getTagBytes()));
+                mlen + SchwaemmType.S256256.getTagBytes()));
         Assertions.assertThat(line).isEqualTo(cipherGotten);
 
         // New line.

@@ -1,3 +1,5 @@
+package sparkle;
+
 public class MaskedSparkleBoolean {
     public static final int maxBranches = 8;
     private static final int[] rcon =

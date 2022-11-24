@@ -1,7 +1,9 @@
+package sparkle;
+
 import java.util.Random;
 
 /**
- * Sparkle permutation.
+ * sparkle.Sparkle permutation.
  */
 public final class MaskedSparkleFirstOrder {
 

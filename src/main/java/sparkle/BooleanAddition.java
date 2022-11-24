@@ -1,4 +1,4 @@
-import java.util.Arrays;
+package sparkle;
 
 /***
  * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf

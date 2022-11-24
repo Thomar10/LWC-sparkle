@@ -1,3 +1,5 @@
+package sparkle;
+
 import java.util.Arrays;
 import java.util.Random;
 import org.assertj.core.api.Assertions;

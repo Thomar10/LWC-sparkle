@@ -1,5 +1,9 @@
+package esch;
+
 import java.util.Arrays;
 import java.util.function.Consumer;
+import sparkle.Sparkle;
+import util.ConversionUtil;
 
 public final class Esch {
 
@@ -54,7 +58,7 @@ public final class Esch {
                 this.sparkleSlim = Sparkle::sparkle512Slim;
                 this.sparkle = Sparkle::sparkle512;
             }
-            default -> throw new RuntimeException("Unknown Esch configuration!");
+            default -> throw new RuntimeException("Unknown esch.Esch configuration!");
         }
 
 

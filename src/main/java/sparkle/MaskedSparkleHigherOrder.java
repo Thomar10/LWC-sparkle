@@ -1,8 +1,10 @@
+package sparkle;
+
 import java.util.Arrays;
 import java.util.Random;
 
 /**
- * Sparkle permutation.
+ * sparkle.Sparkle permutation.
  */
 public final class MaskedSparkleHigherOrder {
 

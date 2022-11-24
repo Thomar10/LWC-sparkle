@@ -1,4 +1,7 @@
+package schwaemm;
+
 import java.util.Random;
+import util.ConversionUtil;
 
 public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] message,
                              byte[] cipherC, byte[] cipherJava, int[] stateC, int[] stateJ) {
