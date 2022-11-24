@@ -46,36 +46,15 @@ public final class MaskedSparkleHigherOrder {
   }
 
   private static void sparkle(int[][] state, int brans, int steps) {
-
     for (int i = 0; i < steps; i++) {
       state[0][1] ^= rcon[i % maxBranches];
       state[0][3] ^= i;
-      for (int k = 0; k < state.length - 1; k++) {
-        for (int j = 0; j < 2 * brans; j += 2) {
-          int rc = rcon[j >> 1];
-          int toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 31, 24, k);
-          }
-          alzetteRoundLast(state, j, 31, 24, rc, toAdd);
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 17, 17, k);
-          }
-          alzetteRoundLast(state, j, 17, 17, rc, toAdd);
-
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 0, 31, k);
-          }
-          alzetteRoundLast(state, j, 0, 31, rc, toAdd);
-
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 24, 16, k);
-          }
-          alzetteRoundLast(state, j, 24, 16, rc, toAdd);
-        }
+      for (int j = 0; j < 2 * brans; j += 2) {
+        int rc = rcon[j >> 1];
+        alzetteRound(state, j, 31, 24, rc);
+        alzetteRound(state, j, 17, 17, rc);
+        alzetteRound(state, j, 0, 31, rc);
+        alzetteRound(state, j, 24, 16, rc);
       }
       for (int[] s : state) {
         binarySparkleOperations(s, brans);
@@ -105,20 +84,25 @@ public final class MaskedSparkleHigherOrder {
     state[brans + 1] = y0;
   }
 
-  static int alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int index) {
-    // TODO MUST BE DONE BETTER
-    // First order
-    if (state.length == 2) {
-      int toAdd = rot(state[index][j + 1], shiftOne);
-      int stateJ = binaryToArithmetic(state[index][j], state[1][j]);
-      stateJ += toAdd;
-      state[index][j] = arithmeticToBinary(stateJ, state[1][j]);
-      state[index][j + 1] ^= rot(state[index][j], shiftTwo);
-      return toAdd;
-    } else {
-      //booleanToArithmeticHigherOrder(state, )
-      return 0;
+  static void alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int rc) {
+    int[] toAdds = new int[state.length];
+    int[] statesJ = new int[state.length];
+    for (int i = 0; i < toAdds.length; i++) {
+      toAdds[i] = rot(state[i][j + 1], shiftOne);
+      statesJ[i] = state[i][j];
     }
+
+    int[] statesA = booleanToArithmeticHigherOrder(statesJ);
+    int[] toAddsA = booleanToArithmeticHigherOrder(toAdds);
+    for (int i = 0; i < state.length; i++) {
+      statesA[i] = statesA[i] + toAddsA[i];
+    }
+    int[] statesB = convertAToB(statesA);
+    for (int i = 0; i < state.length; i++) {
+      state[i][j] = statesB[i];
+      state[i][j + 1] ^= rot(state[i][j], shiftTwo);
+    }
+    state[0][j] ^= rc; //Only XOR by constant to first share or every odd share
   }
 
   static void alzetteRoundLast(int[][] state, int j, int shiftOne, int shiftTwo, int rc,
@@ -136,11 +120,8 @@ public final class MaskedSparkleHigherOrder {
     }
   }
 
-  public static int[] booleanToArithmeticHigherOrder(int x[][], int index) {
-    int[] maskedColumn = new int[x.length];
-    for (int i = 0; i < x.length; i++) {
-      maskedColumn[i] = x[i][index];
-    }
+  public static int[] booleanToArithmeticHigherOrder(int x[]) {
+
     int[] A = new int[x.length];
     int[] ADot = new int[x.length];
     for (int i = 0; i < A.length - 1; i++) {
@@ -150,7 +131,7 @@ public final class MaskedSparkleHigherOrder {
     }
 
     int[] y = convertAToB(ADot);
-    int[] z = BooleanAddition.secureBooleanAdditionGoubin(maskedColumn, y);
+    int[] z = BooleanAddition.secureBooleanAdditionGoubin(x, y);
     A[A.length - 1] = fullXOR(z);
     return A;
   }

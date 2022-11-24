@@ -2,6 +2,7 @@ package schwaemm;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
 import util.ConversionUtil;
 
@@ -39,8 +40,8 @@ public final class SchwaemmMasked {
         SPARKLE_STATE = 256;
         SPARKLE_RATE = 128;
         SPARKLE_CAPACITY = 128;
-        this.sparkleSlim = MaskedSparkleFirstOrder::sparkle256Slim;
-        this.sparkle = MaskedSparkleFirstOrder::sparkle256;
+        this.sparkleSlim = MaskedSparkleBoolean::sparkle256Slim;
+        this.sparkle = MaskedSparkleBoolean::sparkle256;
         this.type = type;
       }
       case S192192 -> {
