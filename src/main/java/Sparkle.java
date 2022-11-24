@@ -56,9 +56,9 @@ public final class Sparkle {
       for (int j = 0; j < 2 * brans; j += 2) {
         rc = rcon[j >> 1];
         alzetteRound(state, j, 31, 24, rc);
-//        alzetteRound(state, j, 17, 17, rc);
-//        alzetteRound(state, j, 0, 31, rc);
-//        alzetteRound(state, j, 24, 16, rc);
+        alzetteRound(state, j, 17, 17, rc);
+        alzetteRound(state, j, 0, 31, rc);
+        alzetteRound(state, j, 24, 16, rc);
       }
       tmpx = x0 = state[0];
       tmpy = y0 = state[1];

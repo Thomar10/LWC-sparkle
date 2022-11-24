@@ -56,24 +56,23 @@ public final class SparkleMasked {
             toAdd += alzetteRound(state, j, 31, 24, k);
           }
           alzetteRoundLast(state, j, 31, 24, rc, toAdd);
-//
-//          toAdd = 0;
-//          for (int l = 1; l < state.length; l++) {
-//            toAdd += alzetteRound(state, j, 17, 17, k);
-//          }
-//          alzetteRoundLast(state, j, 17, 17, rc, toAdd);
-//
-//          toAdd = 0;
-//          for (int l = 1; l < state.length; l++) {
-//            toAdd +=  alzetteRound(state, j, 0, 31, k);
-//          }
-//          alzetteRoundLast(state, j, 0, 31, rc, toAdd);
-//
-//          toAdd = 0;
-//          for (int l = 1; l < state.length; l++) {
-//            toAdd +=  alzetteRound(state, j, 24, 16, k);
-//          }
-//          alzetteRoundLast(state, j, 24, 16, rc, toAdd);
+          toAdd = 0;
+          for (int l = 1; l < state.length; l++) {
+            toAdd += alzetteRound(state, j, 17, 17, k);
+          }
+          alzetteRoundLast(state, j, 17, 17, rc, toAdd);
+
+          toAdd = 0;
+          for (int l = 1; l < state.length; l++) {
+            toAdd += alzetteRound(state, j, 0, 31, k);
+          }
+          alzetteRoundLast(state, j, 0, 31, rc, toAdd);
+
+          toAdd = 0;
+          for (int l = 1; l < state.length; l++) {
+            toAdd += alzetteRound(state, j, 24, 16, k);
+          }
+          alzetteRoundLast(state, j, 24, 16, rc, toAdd);
         }
       }
       for (int[] s : state) {
@@ -178,46 +177,23 @@ public final class SparkleMasked {
       return A;
     }
 
-    int lowerElements = A.length / 2;
-    int[] aLower = Arrays.copyOf(A, lowerElements);
+    int[] aLower = Arrays.copyOf(A, A.length / 2);
+    System.out.println("a lower " + Arrays.toString(aLower));
     int[] x = convertAToBEven(aLower);
     int[] xDot = expand(x);
-    int[] aMiddle = Arrays.copyOfRange(A, lowerElements, 2 * lowerElements);
-    int[] y = convertAToBEven(aMiddle);
+    int[] aUpper = Arrays.copyOfRange(A, (A.length + 1) / 2 - 1, A.length);
+    System.out.println("a upper " + Arrays.toString(aUpper));
+    int[] y = convertAToBEven(aUpper);
     int[] yDot = expand(y);
-
-    int[] aUpper = Arrays.copyOfRange(A, 2 * lowerElements, A.length);
-    int[] z = convertAToBEven(aUpper);
-    int[] zDot = expand(z);
-//    System.out.println("x " + Arrays.toString(xDot));
-//    System.out.println("y " + Arrays.toString(yDot));
-//    System.out.println("z " + Arrays.toString(zDot));
-
-    return new int[]{xDot[0] ^ xDot[1], yDot[0] ^ yDot[1],
-        zDot[0] ^ zDot[1]};//BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
+    System.out.println(Arrays.toString(xDot));
+    System.out.println(Arrays.toString(yDot));
+    return BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
   }
 
   public static int[] convertAToB(int[] A) {
     return A.length % 2 == 0 ? convertAToBEven(A) : convertAToBOdd(A);
   }
 
-  // TODO MAKE SECURE LUL AND MAKE IT WORK WAH
-  private static int[] secAdd(int[] x, int[] y) {
-    int length = Math.max(x.length, y.length);
-    int[] result = new int[length];
-    for (int i = 0; i < length; i++) {
-//      if (i >= x.length) {
-//        result[i] = y[i];
-//
-//      } else if (i >= y.length) {
-//        result[i] = x[i];
-//      }
-//      else {
-      result[i] = x[i] + y[i];
-//      }
-    }
-    return result;
-  }
 
   public static int[] expand(int[] elements) {
     int[] y = new int[elements.length * 2];
