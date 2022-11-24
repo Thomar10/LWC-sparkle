@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 /***
  * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf
  */
@@ -52,10 +54,10 @@ public class BooleanAddition {
             a[i] = x[i] ^ y[i];
         }
 
-        for(int j = 0; j < k; j++){
+        for (int j = 1; j < k; j++) {
             int[] ua = secureBooleanAnd(u, a);
 
-            for(int i = 0; i < n; i++){
+            for (int i = 0; i < n; i++) {
                 u[i] = 2 * (ua[i] ^ w[i]); //Maybe wrong as ints are not unsigned
             }
         }
@@ -65,7 +67,6 @@ public class BooleanAddition {
         for(int i = 0; i < n; i++){
             z[i] = x[i] ^ y[i] ^ u[i];
         }
-
         return z;
     }
 }

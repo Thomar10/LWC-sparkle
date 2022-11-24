@@ -164,7 +164,7 @@ public final class SchwaemmMasked128128Test {
   @RepeatedTest(50)
   void schwaemmHelperMaskAndRecoverHigherOrder() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
-    int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 3);
+    int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 4);
     Assertions.assertThat(data.stateC()).isEqualTo(SchwaemmHelper.recoverState(maskedState));
 
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);

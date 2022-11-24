@@ -135,8 +135,6 @@ public final class SparkleMasked {
     for (int i = 0; i < x.length; i++) {
       maskedColumn[i] = x[i][index];
     }
-    System.out.println(maskedColumn[0] ^ maskedColumn[1]);
-//    System.out.println(maskedColumn[0] ^ maskedColumn[1] ^ maskedColumn[2]);
     int[] A = new int[x.length];
     int[] ADot = new int[x.length];
     for (int i = 0; i < A.length - 1; i++) {
@@ -145,13 +143,9 @@ public final class SparkleMasked {
       ADot[i] = -rand;
     }
     ADot[ADot.length - 1] = 0;
-    System.out.println("ADot " + Arrays.toString(ADot));
     int[] y = convertAToB(ADot);
-    System.out.println(Arrays.toString(y));
-    System.out.println(Arrays.toString(maskedColumn));
-    int[] z = secAdd(maskedColumn, y);
+    int[] z = BooleanAddition.secureBooleanAdditionGoubin(maskedColumn, y);
     A[A.length - 1] = fullXOR(z);
-    System.out.println("A: " + Arrays.toString(A));
     return A;
   }
 
@@ -164,21 +158,47 @@ public final class SparkleMasked {
     return res;
   }
 
-  public static int[] convertAToB(int[] A) {
+  public static int[] convertAToBEven(int[] A) {
     if (A.length == 1) {
-      return new int[]{A[0]};
+      return A;
     }
-    int[] x = convertAToB(Arrays.copyOf(A, A.length / 2));
-    System.out.println("x " + Arrays.toString(x));
+
+    int[] aLower = Arrays.copyOf(A, A.length / 2);
+    int[] x = convertAToBEven(aLower);
     int[] xDot = expand(x);
-    int[] y = convertAToB(Arrays.copyOfRange(A, (A.length - 1) / 4 + 1, A.length));
-    System.out.println("y " + Arrays.toString(y));
+    int[] aUpper = Arrays.copyOfRange(A, A.length / 2, A.length);
+    int[] y = convertAToBEven(aUpper);
     int[] yDot = expand(y);
-    System.out.println("xDot " + Arrays.toString(xDot));
-    System.out.println(xDot[0] ^ xDot[1]);
-    System.out.println("yDot " + Arrays.toString(yDot));
-    System.out.println(yDot[0] ^ yDot[1]);
-    return secAdd(xDot, yDot);
+
+    return BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
+  }
+
+  public static int[] convertAToBOdd(int[] A) {
+    if (A.length == 1) {
+      return A;
+    }
+
+    int lowerElements = A.length / 2;
+    int[] aLower = Arrays.copyOf(A, lowerElements);
+    int[] x = convertAToBEven(aLower);
+    int[] xDot = expand(x);
+    int[] aMiddle = Arrays.copyOfRange(A, lowerElements, 2 * lowerElements);
+    int[] y = convertAToBEven(aMiddle);
+    int[] yDot = expand(y);
+
+    int[] aUpper = Arrays.copyOfRange(A, 2 * lowerElements, A.length);
+    int[] z = convertAToBEven(aUpper);
+    int[] zDot = expand(z);
+//    System.out.println("x " + Arrays.toString(xDot));
+//    System.out.println("y " + Arrays.toString(yDot));
+//    System.out.println("z " + Arrays.toString(zDot));
+
+    return new int[]{xDot[0] ^ xDot[1], yDot[0] ^ yDot[1],
+        zDot[0] ^ zDot[1]};//BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
+  }
+
+  public static int[] convertAToB(int[] A) {
+    return A.length % 2 == 0 ? convertAToBEven(A) : convertAToBOdd(A);
   }
 
   // TODO MAKE SECURE LUL AND MAKE IT WORK WAH
@@ -199,11 +219,11 @@ public final class SparkleMasked {
     return result;
   }
 
-  public static int[] expand(int[] x) {
-    int[] y = new int[x.length * 2];
-    for (int i = 0; i < x.length; i++) {
+  public static int[] expand(int[] elements) {
+    int[] y = new int[elements.length * 2];
+    for (int i = 0; i < elements.length; i++) {
       int r = random.nextInt(Integer.MAX_VALUE);
-      y[2 * i] = x[i] ^ r;
+      y[2 * i] = elements[i] ^ r;
       y[2 * i + 1] = r;
     }
     return y;
