@@ -1,10 +1,9 @@
-import java.util.Arrays;
 import java.util.Random;
 
 /**
  * Sparkle permutation.
  */
-public final class SparkleMasked {
+public final class MaskedSparkleFirstOrder {
 
   public static final int maxBranches = 8;
   private static final int[] rcon = new int[]{-1209970334, -1083090816, 951376470, 844003128,
@@ -44,34 +43,23 @@ public final class SparkleMasked {
   }
 
   private static void sparkle(int[][] state, int brans, int steps) {
-
+    int toAdd;
     for (int i = 0; i < steps; i++) {
       state[0][1] ^= rcon[i % maxBranches];
       state[0][3] ^= i;
       for (int k = 0; k < state.length - 1; k++) {
         for (int j = 0; j < 2 * brans; j += 2) {
           int rc = rcon[j >> 1];
-          int toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 31, 24, k);
-          }
+          toAdd = alzetteRound(state, j, 31, 24, k);
           alzetteRoundLast(state, j, 31, 24, rc, toAdd);
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 17, 17, k);
-          }
+
+          toAdd = alzetteRound(state, j, 17, 17, k);
           alzetteRoundLast(state, j, 17, 17, rc, toAdd);
 
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 0, 31, k);
-          }
+          toAdd = alzetteRound(state, j, 0, 31, k);
           alzetteRoundLast(state, j, 0, 31, rc, toAdd);
 
-          toAdd = 0;
-          for (int l = 1; l < state.length; l++) {
-            toAdd += alzetteRound(state, j, 24, 16, k);
-          }
+          toAdd = alzetteRound(state, j, 24, 16, k);
           alzetteRoundLast(state, j, 24, 16, rc, toAdd);
         }
       }
@@ -104,20 +92,21 @@ public final class SparkleMasked {
   }
 
   static int alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int index) {
-    // TODO MUST BE DONE BETTER
-    // First order
-    if (state.length == 2) {
-      int toAdd = rot(state[index][j + 1], shiftOne);
-      int stateJ = binaryToArithmetic(state[index][j], state[1][j]);
-      stateJ += toAdd;
-      state[index][j] = arithmeticToBinary(stateJ, state[1][j]);
-      state[index][j + 1] ^= rot(state[index][j], shiftTwo);
-      return toAdd;
-    } else {
-      return 0;
+    int toAdd = rot(state[index][j + 1], shiftOne);
+    int stateJ = binaryToArithmetic(state[index][j], state[1][j]);
+    stateJ += toAdd;
+    for (int i = 0; i < state.length - 1; i++) {
+      if (i == j) {
+        continue;
+      }
+      // TODO HMM for higher order xd
     }
+    state[index][j] = arithmeticToBinary(stateJ, state[1][j]);
+    state[index][j + 1] ^= rot(state[index][j], shiftTwo);
+    return toAdd;
   }
 
+  // TODO FIX FOR HIGHER ORDER!
   static void alzetteRoundLast(int[][] state, int j, int shiftOne, int shiftTwo, int rc,
       int toAddOther) {
     int index = state.length - 1;
@@ -129,91 +118,15 @@ public final class SparkleMasked {
     state[index][j] ^= rc;
   }
 
-  public static int[] booleanToArithmeticHigherOrder(int x[][], int index) {
-    int[] maskedColumn = new int[x.length];
-    for (int i = 0; i < x.length; i++) {
-      maskedColumn[i] = x[i][index];
-    }
-    int[] A = new int[x.length];
-    int[] ADot = new int[x.length];
-    for (int i = 0; i < A.length - 1; i++) {
-      int rand = random.nextInt(Integer.MAX_VALUE);
-      A[i] = rand;
-      ADot[i] = -rand;
-    }
-    ADot[ADot.length - 1] = 0;
-    int[] y = convertAToB(ADot);
-    int[] z = BooleanAddition.secureBooleanAdditionGoubin(maskedColumn, y);
-    A[A.length - 1] = fullXOR(z);
-    return A;
-  }
-
-  // TODO MAKE SECURE
-  private static int fullXOR(int[] y) {
-    int res = 0;
-    for (int number : y) {
-      res ^= number;
-    }
-    return res;
-  }
-
-  public static int[] convertAToBEven(int[] A) {
-    if (A.length == 1) {
-      return A;
-    }
-
-    int[] aLower = Arrays.copyOf(A, A.length / 2);
-    int[] x = convertAToBEven(aLower);
-    int[] xDot = expand(x);
-    int[] aUpper = Arrays.copyOfRange(A, A.length / 2, A.length);
-    int[] y = convertAToBEven(aUpper);
-    int[] yDot = expand(y);
-
-    return BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
-  }
-
-  public static int[] convertAToBOdd(int[] A) {
-    if (A.length == 1) {
-      return A;
-    }
-
-    int[] aLower = Arrays.copyOf(A, A.length / 2);
-    System.out.println("a lower " + Arrays.toString(aLower));
-    int[] x = convertAToBEven(aLower);
-    int[] xDot = expand(x);
-    int[] aUpper = Arrays.copyOfRange(A, (A.length + 1) / 2 - 1, A.length);
-    System.out.println("a upper " + Arrays.toString(aUpper));
-    int[] y = convertAToBEven(aUpper);
-    int[] yDot = expand(y);
-    System.out.println(Arrays.toString(xDot));
-    System.out.println(Arrays.toString(yDot));
-    return BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
-  }
-
-  public static int[] convertAToB(int[] A) {
-    return A.length % 2 == 0 ? convertAToBEven(A) : convertAToBOdd(A);
-  }
-
-
-  public static int[] expand(int[] elements) {
-    int[] y = new int[elements.length * 2];
-    for (int i = 0; i < elements.length; i++) {
-      int r = random.nextInt(Integer.MAX_VALUE);
-      y[2 * i] = elements[i] ^ r;
-      y[2 * i + 1] = r;
-    }
-    return y;
-  }
-
   public static int binaryToArithmetic(int x, int r) {
-    int gamma = random.nextInt(Integer.MAX_VALUE);
-    int T = x ^ gamma;
+    long gamma = random.nextInt(Integer.MAX_VALUE);
+    long T = x ^ gamma;
     T = T - gamma;
     T = T ^ x;
     gamma = gamma ^ r;
-    int A = x ^ gamma;
+    long A = x ^ gamma;
     A = A - gamma;
-    return (A ^ T);
+    return (int) (A ^ T);
   }
 
   public static int arithmeticToBinary(int A, int r) {

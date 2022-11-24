@@ -3,7 +3,7 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 
-public class SparkleMaskedTest {
+public class MaskedSparkleFirstOrderTest {
 
   static Random random = new Random();
 
@@ -77,7 +77,7 @@ public class SparkleMaskedTest {
   void maskedSparkle256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy);
-    SparkleMasked.sparkle256(state);
+    MaskedSparkleFirstOrder.sparkle256(state);
     Sparkle.sparkle256(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
@@ -86,7 +86,7 @@ public class SparkleMaskedTest {
   void maskedSparkleSlim256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy);
-    SparkleMasked.sparkle256Slim(state);
+    MaskedSparkleFirstOrder.sparkle256Slim(state);
     Sparkle.sparkle256Slim(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
@@ -95,7 +95,7 @@ public class SparkleMaskedTest {
   void maskedSparkle256HigherOrder() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy, 3);
-    SparkleMasked.sparkle256(state);
+    MaskedSparkleFirstOrder.sparkle256(state);
     Sparkle.sparkle256(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
@@ -105,7 +105,7 @@ public class SparkleMaskedTest {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy, 3);
     System.out.println(Arrays.toString(states.stateNormal));
-    int[] converted = SparkleMasked.booleanToArithmeticHigherOrder(state, 0);
+    int[] converted = MaskedSparkleHigherOrder.booleanToArithmeticHigherOrder(state, 0);
     int result = 0;
     for (int number : converted) {
       result += number;
@@ -113,16 +113,21 @@ public class SparkleMaskedTest {
     Assertions.assertThat(states.stateNormal[0]).isEqualTo(result);
   }
 
-  @RepeatedTest(1)
+  @RepeatedTest(50)
+  void sparkleOrder4() {
+    RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
+    int[][] state = generateRandomMaskedStateArithmetic(states.copy, 4);
+    MaskedSparkleFirstOrder.sparkle256(state);
+    Sparkle.sparkle256(states.stateNormal);
+    Assertions.assertThat(recoverState(state)).isEqualTo(states.stateNormal);
+  }
+
+  @RepeatedTest(50)
   void convertBackAndFourthArithmetic() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedStateArithmetic(states.copy, 4);
     int[] toConvert = new int[]{state[0][0], state[1][0], state[2][0], state[3][0]};
-    System.out.println("toConvert " + Arrays.toString(toConvert));
-    System.out.println("States normal " + states.stateNormal[0]);
-    System.out.println("Reconstructed " + (state[0][0] + state[1][0] + state[2][0] + state[3][0]));
-    int[] converted = SparkleMasked.convertAToB(toConvert);
-    System.out.println(converted[0] ^ converted[1]);
+    int[] converted = MaskedSparkleHigherOrder.convertAToB(toConvert);
     Assertions.assertThat(states.stateNormal[0])
         .isEqualTo(converted[0] ^ converted[1] ^ converted[2] ^ converted[3]);
   }
@@ -135,9 +140,10 @@ public class SparkleMaskedTest {
     System.out.println("toConvert " + Arrays.toString(toConvert));
     System.out.println("States normal " + states.stateNormal[0]);
     System.out.println("Reconstructed " + (state[0][0] + state[1][0] + state[2][0]));
-    int[] converted = SparkleMasked.convertAToB(toConvert);
-//    Assertions.assertThat(states.stateNormal[0])
-//        .isEqualTo(converted[0] ^ converted[1] ^ converted[2]);
+    System.out.println("The first two "  + (state[0][0] + state[1][0]));
+    int[] converted = MaskedSparkleHigherOrder.convertAToB(toConvert);
+    Assertions.assertThat(states.stateNormal[0])
+        .isEqualTo(converted[0] ^ converted[1] ^ converted[2]);
   }
 
   @RepeatedTest(1)
@@ -145,11 +151,7 @@ public class SparkleMaskedTest {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedStateArithmetic(states.copy, 5);
     int[] toConvert = new int[]{state[0][0], state[1][0], state[2][0], state[3][0], state[4][0]};
-    System.out.println("toConvert " + Arrays.toString(toConvert));
-    System.out.println("States normal " + states.stateNormal[0]);
-    System.out.println(
-        "Reconstructed " + (state[0][0] + state[1][0] + state[2][0] + state[3][0] + state[4][0]));
-    int[] converted = SparkleMasked.convertAToB(toConvert);
+    int[] converted = MaskedSparkleHigherOrder.convertAToB(toConvert);
     Assertions.assertThat(states.stateNormal[0])
         .isEqualTo(converted[0] ^ converted[1] ^ converted[2]);
   }
@@ -164,7 +166,7 @@ public class SparkleMaskedTest {
   @RepeatedTest(10)
   void expandTest() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-    int[] expanded = SparkleMasked.expand(states.stateNormal);
+    int[] expanded = MaskedSparkleHigherOrder.expand(states.stateNormal);
     int expandedSum = 0;
     for (int number : expanded) {
       expandedSum ^= number;

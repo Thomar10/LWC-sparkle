@@ -167,7 +167,7 @@ public final class SchwaemmMasked128128Test {
     int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 4);
     Assertions.assertThat(data.stateC()).isEqualTo(SchwaemmHelper.recoverState(maskedState));
 
-    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);
+    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
     SchwaemmHelper recovered = SchwaemmHelper.recoverSchwaemm(maskedData);
     Assertions.assertThat(data.key()).isEqualTo(recovered.key());
     Assertions.assertThat(data.message()).isEqualTo(recovered.message());
@@ -175,12 +175,14 @@ public final class SchwaemmMasked128128Test {
     Assertions.assertThat(data.cipherJava()).isEqualTo(recovered.cipherJava());
   }
 
+
+  // TODO HIGHER ORDER
   @RepeatedTest(50)
   void processPlaintextHigherOrder() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 1);
 
     schwaemm.encrypt(data.stateJ(), data.message(), data.cipherJava());
-    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);
+    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
 
     schwaemmMasked.encrypt(maskedData.state(), maskedData.message(), maskedData.cipher());
 

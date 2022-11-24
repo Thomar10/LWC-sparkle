@@ -35,8 +35,8 @@ public final class SchwaemmMasked {
         SPARKLE_STATE = 256;
         SPARKLE_RATE = 128;
         SPARKLE_CAPACITY = 128;
-        this.sparkleSlim = SparkleMasked::sparkle256Slim;
-        this.sparkle = SparkleMasked::sparkle256;
+        this.sparkleSlim = MaskedSparkleFirstOrder::sparkle256Slim;
+        this.sparkle = MaskedSparkleFirstOrder::sparkle256;
         this.type = type;
       }
       case S192192 -> {
@@ -46,8 +46,8 @@ public final class SchwaemmMasked {
         SPARKLE_STATE = 384;
         SPARKLE_RATE = 192;
         SPARKLE_CAPACITY = 192;
-        this.sparkleSlim = SparkleMasked::sparkle384Slim;
-        this.sparkle = SparkleMasked::sparkle384;
+        this.sparkleSlim = MaskedSparkleFirstOrder::sparkle384Slim;
+        this.sparkle = MaskedSparkleFirstOrder::sparkle384;
         this.type = type;
       }
       case S256128 -> {
@@ -57,8 +57,8 @@ public final class SchwaemmMasked {
         SPARKLE_STATE = 384;
         SPARKLE_RATE = 256;
         SPARKLE_CAPACITY = 128;
-        this.sparkleSlim = SparkleMasked::sparkle384Slim;
-        this.sparkle = SparkleMasked::sparkle384;
+        this.sparkleSlim = MaskedSparkleFirstOrder::sparkle384Slim;
+        this.sparkle = MaskedSparkleFirstOrder::sparkle384;
         this.type = type;
       }
       case S256256 -> {
@@ -68,8 +68,8 @@ public final class SchwaemmMasked {
         SPARKLE_STATE = 512;
         SPARKLE_RATE = 256;
         SPARKLE_CAPACITY = 256;
-        this.sparkleSlim = SparkleMasked::sparkle512Slim;
-        this.sparkle = SparkleMasked::sparkle512;
+        this.sparkleSlim = MaskedSparkleFirstOrder::sparkle512Slim;
+        this.sparkle = MaskedSparkleFirstOrder::sparkle512;
         this.type = type;
       }
       default -> throw new RuntimeException("Unknown Schwaemm configuration!");

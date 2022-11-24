@@ -1,6 +1,4 @@
-import java.util.Random;
-
-public class MaskedSparkle {
+public class MaskedSparkleBoolean {
     public static final int maxBranches = 8;
     private static final int[] rcon =
             new int[]{
