@@ -159,7 +159,6 @@ public final class SchwaemmMasked {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
 
-    // TODO FIX
     if (length < RATE_BYTES) {
       ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state[index], length,
           RATE_BYTES - length);
@@ -271,7 +270,6 @@ public final class SchwaemmMasked {
       sparkleSlim.accept(state);
     }
     for (int i = 0; i < state.length; i++) {
-      // TODO DO BETTER LUL
       if (i == 0) {
         state[i][STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
       }
@@ -312,31 +310,6 @@ public final class SchwaemmMasked {
       buffer[j] ^= tmp2;
     }
     ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
-  }
-
-  static int[] recoverState(int[][] state) {
-    int[] result = new int[state[0].length];
-    for (int i = 0; i < state[0].length; i++) {
-      result[i] = state[0][i] ^ state[1][i];
-    }
-    return result;
-  }
-
-  public static byte[] recoverByteArrays(byte[][] bytes) {
-    // TODO FIX if length of bytes[i] == 0 better
-    if (bytes[0].length == 0) {
-      return new byte[0];
-    }
-    int[][] maskedInts = new int[bytes.length][(bytes[0].length - 1) / 4 + 1];
-    for (int i = 0; i < bytes.length; i++) {
-      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i],
-          (bytes[0].length - 1) / 4 + 1);
-    }
-    int[] recoveredInts = recoverState(maskedInts);
-    byte[] recoveredBytes = new byte[bytes[0].length];
-    ConversionUtil.populateByteArrayFromInts(recoveredInts, recoveredBytes, 0,
-        recoveredBytes.length, 0);
-    return recoveredBytes;
   }
 
   void associateData(int[][] state, byte[][] data) {
