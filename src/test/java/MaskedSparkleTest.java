@@ -6,50 +6,103 @@ import java.util.Random;
 public class MaskedSparkleTest {
 
     @RepeatedTest(10)
-    void maskedSparkle256Test(){
-        RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-        Sparkle.sparkle256(states.stateNormal);
-        MaskedSparkle.sparkle256(states.stateMasked);
-        MaskedSparkle.sparkle256(states.mask);
+    void secondOrderMaskedSparkle256Test(){
+        HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(2);
+        Sparkle.sparkle256(stateShares.state);
+        MaskedSparkle.sparkle256(stateShares.stateShares);
 
-        recoverState(states.stateMasked, states.mask);
+        int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 
-        Assertions.assertThat(states.stateNormal).isEqualTo(states.stateMasked);
+        Assertions.assertThat(stateShares.state).isEqualTo(recoveredState);
     }
 
-    /**
-     * Recovers normal state from masked state + mask
-     */
-    void recoverState(int[] maskedState, int[] mask){
-        for(int i = 0; i < maskedState.length; i++){
-            maskedState[i] = maskedState[i] ^ mask[i];
-        }
+    @RepeatedTest(10)
+    void thirdOrderMaskedSparkle256Test(){
+        HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(3);
+        Sparkle.sparkle256(stateShares.state);
+        MaskedSparkle.sparkle256(stateShares.stateShares);
+
+        int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
+
+        Assertions.assertThat(stateShares.state).isEqualTo(recoveredState);
     }
 
-    /***
-     * Creates a very simple mask where stateMasked = stateNormal XOR mask
-     * @param stateNormal normal state to be run through unmasked sparkle
-     * @param stateMasked masked state to be run through masked sparkle each entry stateMasked[i] = stateNormal[i] ^ mask[i]
-     * @param mask mask used to create stateMasked from stateNormal. Should also be run through masked sparkle
-     */
-    record RandomMaskedState(int[] stateNormal, int[] stateMasked, int[] mask){
-        static RandomMaskedState generateRandomMaskedState(){
-            Random random = new Random();
+    @RepeatedTest(10)
+    void fourthOrderMaskedSparkle256Test(){
+        HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(4);
+        Sparkle.sparkle256(stateShares.state);
+        MaskedSparkle.sparkle256(stateShares.stateShares);
 
-            int[] stateN = new int[Sparkle.maxBranches * 2];
-            int[] stateM = new int[Sparkle.maxBranches * 2];
-            int[] mask = new int[Sparkle.maxBranches * 2];
+        int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 
-            for(int i = 0; i < stateN.length; i++){
-                int randomNumber = random.nextInt(Integer.MAX_VALUE);
-                int randomMask = random.nextInt(Integer.MAX_VALUE);
+        Assertions.assertThat(stateShares.state).isEqualTo(recoveredState);
+    }
 
-                stateN[i] = randomNumber;
-                stateM[i] = randomNumber ^ randomMask;
-                mask[i] = randomMask;
+    @RepeatedTest(10)
+    void fifthOrderMaskedSparkle256Test(){
+        HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(5);
+        Sparkle.sparkle256(stateShares.state);
+        MaskedSparkle.sparkle256(stateShares.stateShares);
+
+        int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
+
+        Assertions.assertThat(stateShares.state).isEqualTo(recoveredState);
+    }
+
+    @RepeatedTest(10)
+    void higherOrderStateSharesTest(){
+        HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(5);
+
+        Assertions.assertThat(stateShares.state).isNotEqualTo(stateShares.stateShares[0]);
+
+        int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
+
+        Assertions.assertThat(stateShares.state).isEqualTo(recoveredState);
+    }
+
+    record HigherOrderStateShares(int[] state, int[][] stateShares){
+        static HigherOrderStateShares generateStateShares(int order){
+            int shareLength = Sparkle.maxBranches * 2;
+
+            int[] state = generateRandomShare(shareLength);
+            int[][] stateShares = new int[order][shareLength];
+
+            System.arraycopy(state, 0, stateShares[0], 0, shareLength);
+
+            for(int i = 1; i < order; i++){
+                stateShares[i] = generateRandomShare(shareLength);
+                maskShare(stateShares[0], stateShares[i]);
             }
 
-            return new RandomMaskedState(stateN, stateM, mask);
+            return new HigherOrderStateShares(state, stateShares);
+        }
+
+        static void maskShare(int[] share, int[] mask){
+            for(int i = 0; i < share.length; i++){
+                share[i] ^= mask[i];
+            }
+        }
+
+        static int[] generateRandomShare(int length){
+            Random random = new Random();
+
+            int[] share = new int[length];
+
+            for(int i = 0; i < length; i++){
+                share[i] = random.nextInt(Integer.MAX_VALUE);
+            }
+
+            return share;
+        }
+
+        static int[] recoverState(int[][] stateShares){
+            int[] recoveredState = stateShares[0];
+
+            for(int i = 1; i < stateShares.length; i++) {
+                maskShare(recoveredState, stateShares[i]);
+            }
+
+            return recoveredState;
         }
     }
 }
