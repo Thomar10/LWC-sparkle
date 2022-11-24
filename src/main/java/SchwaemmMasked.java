@@ -124,6 +124,7 @@ public final class SchwaemmMasked {
     int messageIndex = 0;
     int cipherLength = message[0].length;
     int cipherAsIntLength = cipherAsInt[0].length;
+    boolean slimSparkle = message[0].length > RATE_BYTES;
     for (int i = 0; i < state.length; i++) {
       index = 0;
       messageIndex = 0;
@@ -138,7 +139,9 @@ public final class SchwaemmMasked {
         ConversionUtil.populateByteArrayFromInts(messageInt, message[i], 0, TAG_BYTES, 0);
       }
     }
-    sparkleSlim.accept(state);
+    if (slimSparkle) {
+      sparkleSlim.accept(state);
+    }
 
     for (int i = 0; i < state.length; i++) {
       if (i == 0) {
@@ -149,7 +152,6 @@ public final class SchwaemmMasked {
           message[i], messageIndex, i);
     }
     sparkle.accept(state);
-
   }
 
   private void rhoWhiDecLast(int[][] state, int[] data, int length, byte[] cipher, int cipherIndex,
@@ -159,8 +161,11 @@ public final class SchwaemmMasked {
 
     // TODO FIX
     if (length < RATE_BYTES) {
-      ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state[0], length, RATE_BYTES - length);
-      buffer[length / 4] ^= 128 << (8 * (length % 4));
+      ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state[index], length,
+          RATE_BYTES - length);
+      if (index == 0) {
+        buffer[length / 4] ^= 128 << (8 * (length % 4));
+      }
     }
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
@@ -247,6 +252,7 @@ public final class SchwaemmMasked {
     int msgLength = message[0].length;
     int index = 0;
     int cipherIndex = 0;
+    boolean slimSparkle = message[0].length > RATE_BYTES;
     for (int i = 0; i < state.length; i++) {
       index = 0;
       cipherIndex = 0;
@@ -261,7 +267,9 @@ public final class SchwaemmMasked {
         ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes[i], 0, TAG_BYTES, 0);
       }
     }
-    sparkleSlim.accept(state);
+    if (slimSparkle) {
+      sparkleSlim.accept(state);
+    }
     for (int i = 0; i < state.length; i++) {
       // TODO DO BETTER LUL
       if (i == 0) {
@@ -290,7 +298,9 @@ public final class SchwaemmMasked {
     int[] buffer = new int[RATE_WORDS];
     System.arraycopy(data, 0, buffer, 0, data.length);
     if (length < RATE_BYTES) {
-      buffer[length / 4] |= 128 << (8 * (length % 4));
+      if (index == 0) {
+        buffer[length / 4] |= 128 << (8 * (length % 4));
+      }
     }
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
@@ -312,6 +322,23 @@ public final class SchwaemmMasked {
     return result;
   }
 
+  public static byte[] recoverByteArrays(byte[][] bytes) {
+    // TODO FIX if length of bytes[i] == 0 better
+    if (bytes[0].length == 0) {
+      return new byte[0];
+    }
+    int[][] maskedInts = new int[bytes.length][(bytes[0].length - 1) / 4 + 1];
+    for (int i = 0; i < bytes.length; i++) {
+      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i],
+          (bytes[0].length - 1) / 4 + 1);
+    }
+    int[] recoveredInts = recoverState(maskedInts);
+    byte[] recoveredBytes = new byte[bytes[0].length];
+    ConversionUtil.populateByteArrayFromInts(recoveredInts, recoveredBytes, 0,
+        recoveredBytes.length, 0);
+    return recoveredBytes;
+  }
+
   void associateData(int[][] state, byte[][] data) {
     int[][] dataAsInt = new int[data.length][];
     for (int i = 0; i < dataAsInt.length; i++) {
@@ -319,6 +346,7 @@ public final class SchwaemmMasked {
           (data[0].length - 1) / 4 + 1);
     }
     int dataSize = 0;
+    boolean slimSparkle = data[0].length > RATE_BYTES;
     int dataLength = 0;
     int index = 0;
     for (int i = 0; i < state.length; i++) {
@@ -327,12 +355,13 @@ public final class SchwaemmMasked {
       index = 0;
       while (dataSize > RATE_BYTES) {
         rhoWhiAut(state, Arrays.copyOfRange(dataAsInt[i], index, dataLength), i);
-
         dataSize -= RATE_BYTES;
         index += RATE_BYTES / 4;
       }
     }
-    sparkleSlim.accept(state);
+    if (slimSparkle) {
+      sparkleSlim.accept(state);
+    }
     for (int i = 0; i < state.length; i++) {
       // Adding constant... Only do it for one...
       if (i == 0) {
@@ -364,7 +393,9 @@ public final class SchwaemmMasked {
     System.arraycopy(data, 0, buffer, 0, data.length);
 
     if (length < RATE_BYTES) {
-      buffer[length / 4] |= 128 << (8 * (length % 4));
+      if (index == 0) {
+        buffer[length / 4] |= 128 << (8 * (length % 4));
+      }
     }
 
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
