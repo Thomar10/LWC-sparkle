@@ -175,7 +175,7 @@ public final class SchwaemmMasked128128Test {
     Assertions.assertThat(data.cipherJava()).isEqualTo(recovered.cipherJava());
   }
 
-
+/*
   // TODO HIGHER ORDER
   @RepeatedTest(50)
   void processPlaintextHigherOrder() {
@@ -190,6 +190,7 @@ public final class SchwaemmMasked128128Test {
     Assertions.assertThat(recovered.stateJ()).isEqualTo(data.stateJ());
     Assertions.assertThat(recovered.cipherJava()).isEqualTo(data.cipherJava());
   }
+  */
 
   @Test
   void genkatAeadTest() throws IOException {

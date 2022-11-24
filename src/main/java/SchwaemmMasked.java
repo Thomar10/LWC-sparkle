@@ -143,10 +143,11 @@ public final class SchwaemmMasked {
       sparkleSlim.accept(state);
     }
 
-    for (int i = 0; i < state.length; i++) {
-      if (i == 0) {
-        state[i][STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
-      }
+    state[0][STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
+    rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt[0], index, cipherAsIntLength),
+        cipherLength,
+        message[0], messageIndex, 0);
+    for (int i = 1; i < state.length; i++) {
       rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt[i], index, cipherAsIntLength),
           cipherLength,
           message[i], messageIndex, i);
@@ -269,11 +270,10 @@ public final class SchwaemmMasked {
     if (slimSparkle) {
       sparkleSlim.accept(state);
     }
-    for (int i = 0; i < state.length; i++) {
-      if (i == 0) {
-        state[i][STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
-      }
-
+    state[0][STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
+    rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt[0], index, msgAsIntLength), msgLength,
+        cipherBytes[0], cipherIndex, 0);
+    for (int i = 1; i < state.length; i++) {
       rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt[i], index, msgAsIntLength), msgLength,
           cipherBytes[i], cipherIndex, i);
     }
@@ -335,11 +335,10 @@ public final class SchwaemmMasked {
     if (slimSparkle) {
       sparkleSlim.accept(state);
     }
-    for (int i = 0; i < state.length; i++) {
-      // Adding constant... Only do it for one...
-      if (i == 0) {
-        state[i][STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
-      }
+
+    state[0][STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
+    rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt[0], index, dataLength), dataSize, 0);
+    for (int i = 1; i < state.length; i++) {
       rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt[i], index, dataLength), dataSize, i);
     }
     sparkle.accept(state);
