@@ -161,6 +161,34 @@ public final class SchwaemmMasked128128Test {
     Assertions.assertThat(data.cipherJava()).isEqualTo(recovered.cipherJava());
   }
 
+  @RepeatedTest(50)
+  void schwaemmHelperMaskAndRecoverHigherOrder() {
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
+    int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 3);
+    Assertions.assertThat(data.stateC()).isEqualTo(SchwaemmHelper.recoverState(maskedState));
+
+    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);
+    SchwaemmHelper recovered = SchwaemmHelper.recoverSchwaemm(maskedData);
+    Assertions.assertThat(data.key()).isEqualTo(recovered.key());
+    Assertions.assertThat(data.message()).isEqualTo(recovered.message());
+    Assertions.assertThat(data.associate()).isEqualTo(recovered.associate());
+    Assertions.assertThat(data.cipherJava()).isEqualTo(recovered.cipherJava());
+  }
+
+  @RepeatedTest(50)
+  void processPlaintextHigherOrder() {
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 1);
+
+    schwaemm.encrypt(data.stateJ(), data.message(), data.cipherJava());
+    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);
+
+    schwaemmMasked.encrypt(maskedData.state(), maskedData.message(), maskedData.cipher());
+
+    SchwaemmHelper recovered = SchwaemmHelper.recoverSchwaemm(maskedData);
+    Assertions.assertThat(recovered.stateJ()).isEqualTo(data.stateJ());
+    Assertions.assertThat(recovered.cipherJava()).isEqualTo(data.cipherJava());
+  }
+
   @Test
   void genkatAeadTest() throws IOException {
     BufferedReader buffer = new BufferedReader(

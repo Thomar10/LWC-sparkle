@@ -51,9 +51,9 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   public static MaskedData convertDataToMasked(SchwaemmHelper data, int order) {
     int[][] maskedState = maskIntArray(data.stateC, order);
 
-    return new MaskedData(maskByteArrays(data.key, 2), maskByteArrays(data.nonce, 2),
-        maskByteArrays(data.associate, 2), maskByteArrays(data.message, 2),
-        maskByteArrays(data.cipherC, 2), maskedState);
+    return new MaskedData(maskByteArrays(data.key, order), maskByteArrays(data.nonce, order),
+        maskByteArrays(data.associate, order), maskByteArrays(data.message, order),
+        maskByteArrays(data.cipherC, order), maskedState);
   }
 
   public static MaskedData convertDataFirstOrder(SchwaemmHelper data) {
@@ -66,24 +66,31 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   public static int[][] maskIntArray(int[] ints, int order) {
     int[][] maskedState = new int[order][ints.length];
-    for (int j = 0; j < ints.length; j++) {
-      int number = random.nextInt(Integer.MAX_VALUE);
-      maskedState[0][j] = number;
-    }
-    for (int j = 0; j < ints.length; j++) {
-      maskedState[1][j] = ints[j] ^ maskedState[0][j];
-    }
-    // TODO HIGHER ORDER
     for (int i = 1; i < order; i++) {
-
+      for (int j = 0; j < ints.length; j++) {
+        int number = random.nextInt(Integer.MAX_VALUE);
+        maskedState[i][j] = number;
+      }
     }
+    for (int j = 0; j < ints.length; j++) {
+      int resultMask = ints[j];
+      for (int i = 1; i < order; i++) {
+        resultMask ^= maskedState[i][j];
+      }
+      maskedState[0][j] = resultMask;
+    }
+
     return maskedState;
   }
 
   static int[] recoverState(int[][] state) {
     int[] result = new int[state[0].length];
     for (int i = 0; i < state[0].length; i++) {
-      result[i] = state[0][i] ^ state[1][i];
+      int resultMask = state[0][i];
+      for (int j = 1; j < state.length; j++) {
+        resultMask ^= state[j][i];
+      }
+      result[i] = resultMask;
     }
     return result;
   }
