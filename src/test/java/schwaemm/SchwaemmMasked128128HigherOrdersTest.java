@@ -23,7 +23,7 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
     schwaemm.initialize(stateJ, data.key(), data.nonce());
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
-    int[][] maskedState = SchwaemmHelper.maskIntArray(stateToMask, 2);
+    int[][] maskedState = SchwaemmHelper.maskIntArray(stateToMask, 4);
     schwaemmMasked.initialize(maskedState, maskedData.key(), maskedData.nonce());
     Assertions.assertThat(stateJ).isEqualTo(SchwaemmHelper.recoverState(maskedState));
   }
@@ -78,7 +78,7 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
 
     byte[] tag = new byte[data.message().length + TAG_BYTES];
-    byte[][] maskedTag = new byte[2][data.message().length + TAG_BYTES];
+    byte[][] maskedTag = new byte[4][data.message().length + TAG_BYTES];
     schwaemm.generateTag(data.stateJ(), tag, data.message().length);
     schwaemmMasked.generateTag(maskedData.state(), maskedTag, maskedData.message()[0].length);
 
