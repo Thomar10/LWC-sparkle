@@ -6,11 +6,13 @@ import org.junit.jupiter.api.RepeatedTest;
 
 public class MaskedSparkleBooleanTest {
 
+  private final MaskedSparkle sparkle = new MaskedSparkleBoolean();
+
   @RepeatedTest(10)
   void secondOrderMaskedSparkle256Test() {
     HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(2);
     Sparkle.sparkle256(stateShares.state);
-    MaskedSparkleBoolean.sparkle256(stateShares.stateShares);
+    sparkle.sparkle256(stateShares.stateShares);
 
     int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 
@@ -21,7 +23,7 @@ public class MaskedSparkleBooleanTest {
   void thirdOrderMaskedSparkle256Test() {
     HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(3);
     Sparkle.sparkle256(stateShares.state);
-    MaskedSparkleBoolean.sparkle256(stateShares.stateShares);
+    sparkle.sparkle256(stateShares.stateShares);
 
     int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 
@@ -32,7 +34,7 @@ public class MaskedSparkleBooleanTest {
   void fourthOrderMaskedSparkle256Test() {
     HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(4);
     Sparkle.sparkle256(stateShares.state);
-    MaskedSparkleBoolean.sparkle256(stateShares.stateShares);
+    sparkle.sparkle256(stateShares.stateShares);
 
     int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 
@@ -43,7 +45,7 @@ public class MaskedSparkleBooleanTest {
   void fifthOrderMaskedSparkle256Test() {
     HigherOrderStateShares stateShares = HigherOrderStateShares.generateStateShares(5);
     Sparkle.sparkle256(stateShares.state);
-    MaskedSparkleBoolean.sparkle256(stateShares.stateShares);
+    sparkle.sparkle256(stateShares.stateShares);
 
     int[] recoveredState = HigherOrderStateShares.recoverState(stateShares.stateShares);
 

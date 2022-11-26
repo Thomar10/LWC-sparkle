@@ -23,7 +23,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   private static final Random random = new Random();
 
-  public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
+  public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength, Random random) {
     // Tests in C only goes up to 32 bits.
     int randomInt = random.nextInt(32 - minLength) + minLength;
     int randomMsg = random.nextInt(32 - minLength) + minLength;
@@ -47,11 +47,23 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return new SchwaemmHelper(key, nonce, associate, message, cipherC, cipherJava, stateC, stateJ);
   }
 
+  public static MaskedData prepareBenchmarkMasked(SchwaemmType type, Random random, int order) {
+    return convertDataToMasked(prepareTest(type, 0, random), order, random);
+  }
+
+  public static SchwaemmHelper prepareTest(SchwaemmType type, int length) {
+    return prepareTest(type, 0, random);
+  }
+
   public static SchwaemmHelper prepareTest(SchwaemmType type) {
-    return prepareTest(type, 0);
+    return prepareTest(type, 0, random);
   }
 
   public static MaskedData convertDataToMasked(SchwaemmHelper data, int order) {
+    return convertDataToMasked(data, order, random);
+  }
+
+  public static MaskedData convertDataToMasked(SchwaemmHelper data, int order, Random random) {
     int[][] maskedState = maskIntArray(data.stateC, order);
 
     return new MaskedData(maskByteArrays(data.key, order), maskByteArrays(data.nonce, order),
@@ -109,7 +121,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return maskByteArrays(bytes, 2);
   }
 
-  private static byte[][] maskByteArrays(byte[] bytes, int order) {
+  public static byte[][] maskByteArrays(byte[] bytes, int order) {
     byte[][] maskedBytes = new byte[order][];
     int[] intAsBytes = ConversionUtil.createIntArrayFromBytes(bytes, (bytes.length + 4 - 1) / 4);
     int[][] maskedInts = maskIntArray(intAsBytes, order);

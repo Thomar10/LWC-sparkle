@@ -1,6 +1,6 @@
 package sparkle;
 
-public class MaskedSparkleBoolean {
+public class MaskedSparkleBoolean implements MaskedSparkle {
     public static final int maxBranches = 8;
     private static final int[] rcon =
             new int[]{
@@ -14,27 +14,27 @@ public class MaskedSparkleBoolean {
                     -1028445891
             };
 
-    public static void sparkle256(int[][] stateShares) {
+    public void sparkle256(int[][] stateShares) {
         sparkle(stateShares, 4, 10);
     }
 
-    public static void sparkle256Slim(int[][] stateShares) {
+    public void sparkle256Slim(int[][] stateShares) {
         sparkle(stateShares, 4, 7);
     }
 
-    public static void sparkle384(int[][] stateShares) {
+    public void sparkle384(int[][] stateShares) {
         sparkle(stateShares, 6, 11);
     }
 
-    public static void sparkle384Slim(int[][] stateShares) {
+    public void sparkle384Slim(int[][] stateShares) {
         sparkle(stateShares, 6, 7);
     }
 
-    public static void sparkle512(int[][] stateShares) {
+    public void sparkle512(int[][] stateShares) {
         sparkle(stateShares, 8, 12);
     }
 
-    public static void sparkle512Slim(int[][] stateShares) {
+    public void sparkle512Slim(int[][] stateShares) {
         sparkle(stateShares, 8, 8);
     }
 

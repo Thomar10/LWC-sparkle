@@ -6,34 +6,34 @@ import java.util.Random;
 /**
  * sparkle.Sparkle permutation.
  */
-public final class MaskedSparkleHigherOrder {
+public final class MaskedSparkleHigherOrder implements MaskedSparkle {
 
   public static final int maxBranches = 8;
   private static final int[] rcon = new int[]{-1209970334, -1083090816, 951376470, 844003128,
       -1156479509, 1333558103, -809524792, -1028445891};
   private static final Random random = new Random(123);
 
-  public static void sparkle256(int[][] state) {
+  public void sparkle256(int[][] state) {
     sparkle(state, 4, 10);
   }
 
-  public static void sparkle256Slim(int[][] state) {
+  public void sparkle256Slim(int[][] state) {
     sparkle(state, 4, 7);
   }
 
-  public static void sparkle384(int[][] state) {
+  public void sparkle384(int[][] state) {
     sparkle(state, 6, 11);
   }
 
-  public static void sparkle384Slim(int[][] state) {
+  public void sparkle384Slim(int[][] state) {
     sparkle(state, 6, 7);
   }
 
-  public static void sparkle512(int[][] state) {
+  public void sparkle512(int[][] state) {
     sparkle(state, 8, 12);
   }
 
-  public static void sparkle512Slim(int[][] state) {
+  public void sparkle512Slim(int[][] state) {
     sparkle(state, 8, 8);
   }
 

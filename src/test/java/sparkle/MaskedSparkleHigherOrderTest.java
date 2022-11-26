@@ -9,6 +9,8 @@ public class MaskedSparkleHigherOrderTest {
 
   static Random random = new Random();
 
+  private final MaskedSparkle sparkle = new MaskedSparkleHigherOrder();
+
   static int[][] generateRandomMaskedState(int[] state, int order) {
     int[][] maskedState = new int[order][state.length];
     for (int i = 1; i < order; i++) {
@@ -44,7 +46,7 @@ public class MaskedSparkleHigherOrderTest {
   void maskedSparkle256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy, 4);
-    MaskedSparkleHigherOrder.sparkle256(state);
+    sparkle.sparkle256(state);
     Sparkle.sparkle256(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
@@ -53,7 +55,7 @@ public class MaskedSparkleHigherOrderTest {
   void maskedSparkleSlim256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy, 4);
-    MaskedSparkleHigherOrder.sparkle256Slim(state);
+    sparkle.sparkle256Slim(state);
     Sparkle.sparkle256Slim(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }

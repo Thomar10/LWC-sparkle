@@ -8,13 +8,14 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import sparkle.MaskedSparkleFirstOrder;
 
 public final class SchwaemmMasked256128Test {
 
   private static final int TAG_BYTES = SchwaemmType.S256128.getTagBytes();
   private static final int STATE_WORDS = SchwaemmType.S256128.getStateSize();
   private final Schwaemm schwaemm = new Schwaemm(SchwaemmType.S256128);
-  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S256128);
+  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S256128, new MaskedSparkleFirstOrder());
 
   @RepeatedTest(50)
   void initializeTest() {
