@@ -59,10 +59,17 @@ public class MaskedSparkleHigherOrderTest {
     }
     MaskedSparkleHigherOrder.sparkle256Slim(state);
     MaskedSparkleBoolean.sparkle256Slim(state2);
-    System.out.println(Arrays.toString(state[0]));
-    System.out.println(Arrays.toString(state2[0]));
+    System.out.println("State H0 " + Arrays.toString(state[0]));
+    System.out.println("State B0 " + Arrays.toString(state2[0]));
+    System.out.println("State H1 " + Arrays.toString(state[1]));
+    System.out.println("State B1 " + Arrays.toString(state2[1]));
+    System.out.println("State H2 " + Arrays.toString(state[2]));
+    System.out.println("State B2 " + Arrays.toString(state2[2]));
+    System.out.println("State H3 " + Arrays.toString(state[3]));
+    System.out.println("State B3 " + Arrays.toString(state2[3]));
     Sparkle.sparkle256Slim(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
+    Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state2));
   }
 
 
@@ -70,7 +77,7 @@ public class MaskedSparkleHigherOrderTest {
 
     static RandomMaskedState generateRandomMaskedState() {
 
-      int[] stateN = new int[Sparkle.maxBranches * 2];
+      int[] stateN = new int[Sparkle.maxBranches];
 
       for (int i = 0; i < stateN.length; i++) {
         int randomNumber = random.nextInt(Integer.MAX_VALUE);

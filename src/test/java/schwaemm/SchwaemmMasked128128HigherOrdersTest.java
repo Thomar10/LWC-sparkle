@@ -93,11 +93,6 @@ public final class SchwaemmMasked128128HigherOrdersTest {
   void encryptAndDecryptMaskedAndUnmasked() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
-    byte[][] key2 = maskedData.key().clone();
-    byte[][] asso = maskedData.associate().clone();
-    byte[][] message = maskedData.message().clone();
-    byte[][] nonce = maskedData.nonce().clone();
-    byte[][] cipher = maskedData.cipher().clone();
 
     schwaemm.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),
@@ -107,19 +102,12 @@ public final class SchwaemmMasked128128HigherOrdersTest {
         data.key(),
         data.nonce());
 
-    schwaemmMasked.encryptAndTag(maskedData.message(), maskedData.cipher(), maskedData.associate(),
+    schwaemmMasked2.encryptAndTag(maskedData.message(), maskedData.cipher(), maskedData.associate(),
         maskedData.key(), maskedData.nonce());
     byte[][] messageBack =
-        schwaemmMasked.decryptAndVerify(maskedData.cipher(), maskedData.associate(),
+        schwaemmMasked2.decryptAndVerify(maskedData.cipher(), maskedData.associate(),
             maskedData.key(),
             maskedData.nonce());
-
-    schwaemmMasked2.encryptAndTag(message, cipher,
-        asso,
-        key2, nonce);
-    schwaemmMasked2.decryptAndVerify(cipher, asso,
-        key2,
-        nonce);
 
     Assertions.assertThat(data.message()).isEqualTo(SchwaemmHelper.recoverByteArrays(messageBack));
     Assertions.assertThat(messageJava).isEqualTo(SchwaemmHelper.recoverByteArrays(messageBack));
@@ -151,13 +139,13 @@ public final class SchwaemmMasked128128HigherOrdersTest {
         .isEqualTo(data.stateJ());
   }
 
-  @RepeatedTest(50)
+  @RepeatedTest(5)
   void processPlaintext() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 1);
 
     schwaemm.encrypt(data.stateJ(), data.message(), data.cipherJava());
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
-    schwaemmMasked.encrypt(maskedData.state(), maskedData.message(), maskedData.cipher());
+    schwaemmMasked2.encrypt(maskedData.state(), maskedData.message(), maskedData.cipher());
 
     SchwaemmHelper recovered = SchwaemmHelper.recoverSchwaemm(maskedData);
     Assertions.assertThat(recovered.stateJ()).isEqualTo(data.stateJ());

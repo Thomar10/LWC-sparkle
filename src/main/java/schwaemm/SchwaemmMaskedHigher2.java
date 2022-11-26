@@ -99,8 +99,6 @@ public final class SchwaemmMaskedHigher2 {
     int[][] state = new int[key.length][STATE_WORDS];
     int cipherTextLength = cipher[0].length - TAG_BYTES;
     initialize(state, key, nonce);
-    System.out.println("State " + Arrays.toString(state[0]));
-    System.out.println("Cipher " + Arrays.toString(cipher[0]));
     if (assoData[0].length > 0) {
       associateData(state, assoData);
     }
@@ -117,34 +115,6 @@ public final class SchwaemmMaskedHigher2 {
               type.getVerifyTagLength()));
     }
     return message;
-  }
-
-  static int[] recoverState(int[][] state) {
-    int[] result = new int[state[0].length];
-    for (int i = 0; i < state[0].length; i++) {
-      int resultMask = state[0][i];
-      for (int j = 1; j < state.length; j++) {
-        resultMask ^= state[j][i];
-      }
-      result[i] = resultMask;
-    }
-    return result;
-  }
-
-  public static byte[] recoverByteArrays(byte[][] bytes) {
-    // TODO FIX if length of bytes[i] == 0 better
-    if (bytes[0].length == 0) {
-      return new byte[0];
-    }
-    int[][] maskedInts = new int[bytes.length][(bytes[0].length - 1) / 4 + 1];
-    for (int i = 0; i < bytes.length; i++) {
-      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i], (bytes[0].length - 1) / 4 + 1);
-    }
-    int[] recoveredInts = recoverState(maskedInts);
-    byte[] recoveredBytes = new byte[bytes[0].length];
-    ConversionUtil.populateByteArrayFromInts(recoveredInts, recoveredBytes, 0,
-        recoveredBytes.length, 0);
-    return recoveredBytes;
   }
 
   void decrypt(int[][] state, byte[][] message, byte[][] cipher) {

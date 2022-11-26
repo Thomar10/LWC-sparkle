@@ -99,8 +99,6 @@ public final class SchwaemmMaskedHigher {
     int[][] state = new int[key.length][STATE_WORDS];
     int cipherTextLength = cipher[0].length - TAG_BYTES;
     initialize(state, key, nonce);
-    System.out.println("State1 " + Arrays.toString(state[0]));
-    System.out.println("Cipher1 " + Arrays.toString(cipher[0]));
     if (assoData[0].length > 0) {
       associateData(state, assoData);
     }
