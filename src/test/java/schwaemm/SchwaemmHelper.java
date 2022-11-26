@@ -21,7 +21,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return s.toString();
   }
 
-  private static final Random random = new Random(123);
+  private static final Random random = new Random();
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
     // Tests in C only goes up to 32 bits.

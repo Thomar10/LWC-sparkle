@@ -107,7 +107,11 @@ public final class SchwaemmMaskedHigher {
       decrypt(state, message, cipher);
     }
     finalize(state, key);
+    System.out.println(Arrays.deepToString(state));
     for (int i = 0; i < cipher.length; i++) {
+      System.out.println(Arrays.toString(ConversionUtil.createIntArrayFromBytes(
+          Arrays.copyOfRange(cipher[i], cipherTextLength, cipher[0].length),
+          type.getVerifyTagLength())));
       verifyTag(
           state[i],
           ConversionUtil.createIntArrayFromBytes(

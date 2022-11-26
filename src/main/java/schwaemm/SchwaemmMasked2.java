@@ -2,11 +2,11 @@ package schwaemm;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
-import sparkle.MaskedSparkleHigherOrder;
 import util.ConversionUtil;
 
-public final class SchwaemmMaskedHigher2 {
+public final class SchwaemmMasked2 {
 
   private final int TAG_BYTES;
   private final Consumer<int[][]> sparkleSlim;
@@ -25,7 +25,7 @@ public final class SchwaemmMaskedHigher2 {
 
   private final SchwaemmType type;
 
-  public SchwaemmMaskedHigher2(SchwaemmType type) {
+  public SchwaemmMasked2(SchwaemmType type) {
     int SCHWAEMM_KEY_LEN;
     int SCHWAEMM_NONCE_LEN;
     int SCHWAEMM_TAG_LEN;
@@ -40,8 +40,8 @@ public final class SchwaemmMaskedHigher2 {
         SPARKLE_STATE = 256;
         SPARKLE_RATE = 128;
         SPARKLE_CAPACITY = 128;
-        this.sparkleSlim = MaskedSparkleHigherOrder::sparkle256Slim;
-        this.sparkle = MaskedSparkleHigherOrder::sparkle256;
+        this.sparkleSlim = MaskedSparkleBoolean::sparkle256Slim;
+        this.sparkle = MaskedSparkleBoolean::sparkle256;
         this.type = type;
       }
       case S192192 -> {
@@ -107,12 +107,7 @@ public final class SchwaemmMaskedHigher2 {
       decrypt(state, message, cipher);
     }
     finalize(state, key);
-    System.out.println(Arrays.deepToString(state));
-
     for (int i = 0; i < cipher.length; i++) {
-      System.out.println(Arrays.toString(ConversionUtil.createIntArrayFromBytes(
-          Arrays.copyOfRange(cipher[i], cipherTextLength, cipher[0].length),
-          type.getVerifyTagLength())));
       verifyTag(
           state[i],
           ConversionUtil.createIntArrayFromBytes(
@@ -206,8 +201,7 @@ public final class SchwaemmMaskedHigher2 {
       diff |= state[RATE_WORDS + i] ^ tag[i];
     }
     if (diff != 0) {
-      System.out.println("diff " + diff);
-      //throw new RuntimeException("Could not verify tag!");
+      throw new RuntimeException("Could not verify tag!");
     }
   }
 
