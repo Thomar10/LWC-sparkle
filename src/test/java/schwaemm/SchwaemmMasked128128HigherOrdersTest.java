@@ -14,7 +14,10 @@ public final class SchwaemmMasked128128HigherOrdersTest {
   private static final int TAG_BYTES = SchwaemmType.S128128.getTagBytes();
   private static final int STATE_WORDS = SchwaemmType.S128128.getStateSize();
   private final Schwaemm schwaemm = new Schwaemm(SchwaemmType.S128128);
-  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128);
+  private final SchwaemmMaskedHigher schwaemmMasked = new SchwaemmMaskedHigher(
+      SchwaemmType.S128128);
+  private final SchwaemmMaskedHigher2 schwaemmMasked2 = new SchwaemmMaskedHigher2(
+      SchwaemmType.S128128);
 
   @RepeatedTest(50)
   void initializeTest() {
@@ -66,7 +69,7 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     schwaemm.decrypt(data.stateJ(), data.message(), randomCipher);
 
     schwaemmMasked.decrypt(maskedData.state(), maskedData.message(),
-        SchwaemmHelper.maskByteFirstOrder(randomCipher));
+        SchwaemmHelper.maskByteArrays(randomCipher, 4));
 
     Assertions.assertThat(data.message())
         .isEqualTo(SchwaemmHelper.recoverSchwaemm(maskedData).message());
@@ -86,10 +89,15 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     Assertions.assertThat(SchwaemmHelper.recoverByteArrays(maskedTag)).isEqualTo(tag);
   }
 
-  @RepeatedTest(50)
+  @RepeatedTest(1)
   void encryptAndDecryptMaskedAndUnmasked() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 4);
+    byte[][] key2 = maskedData.key().clone();
+    byte[][] asso = maskedData.associate().clone();
+    byte[][] message = maskedData.message().clone();
+    byte[][] nonce = maskedData.nonce().clone();
+    byte[][] cipher = maskedData.cipher().clone();
 
     schwaemm.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),
@@ -105,6 +113,13 @@ public final class SchwaemmMasked128128HigherOrdersTest {
         schwaemmMasked.decryptAndVerify(maskedData.cipher(), maskedData.associate(),
             maskedData.key(),
             maskedData.nonce());
+
+    schwaemmMasked2.encryptAndTag(message, cipher,
+        asso,
+        key2, nonce);
+    schwaemmMasked2.decryptAndVerify(cipher, asso,
+        key2,
+        nonce);
 
     Assertions.assertThat(data.message()).isEqualTo(SchwaemmHelper.recoverByteArrays(messageBack));
     Assertions.assertThat(messageJava).isEqualTo(SchwaemmHelper.recoverByteArrays(messageBack));
@@ -176,23 +191,6 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     Assertions.assertThat(data.associate()).isEqualTo(recovered.associate());
     Assertions.assertThat(data.cipherJava()).isEqualTo(recovered.cipherJava());
   }
-
-/*
-  // TODO HIGHER ORDER
-  @RepeatedTest(50)
-  void processPlaintextHigherOrder() {
-    schwaemm.SchwaemmHelper data = schwaemm.SchwaemmHelper.prepareTest(schwaemm.SchwaemmType.S128128, 1);
-
-    schwaemm.encrypt(data.stateJ(), data.message(), data.cipherJava());
-    schwaemm.SchwaemmHelper.MaskedData maskedData = schwaemm.SchwaemmHelper.convertDataToMasked(data, 4);
-
-    schwaemmMasked.encrypt(maskedData.state(), maskedData.message(), maskedData.cipher());
-
-    schwaemm.SchwaemmHelper recovered = schwaemm.SchwaemmHelper.recoverSchwaemm(maskedData);
-    Assertions.assertThat(recovered.stateJ()).isEqualTo(data.stateJ());
-    Assertions.assertThat(recovered.cipherJava()).isEqualTo(data.cipherJava());
-  }
-  */
 
   @Test
   void genkatAeadTest() throws IOException {

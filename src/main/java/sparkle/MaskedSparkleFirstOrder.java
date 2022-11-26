@@ -45,26 +45,17 @@ public final class MaskedSparkleFirstOrder {
   }
 
   private static void sparkle(int[][] state, int brans, int steps) {
-    int toAdd;
     for (int i = 0; i < steps; i++) {
       state[0][1] ^= rcon[i % maxBranches];
       state[0][3] ^= i;
-      for (int k = 0; k < state.length - 1; k++) {
-        for (int j = 0; j < 2 * brans; j += 2) {
-          int rc = rcon[j >> 1];
-          toAdd = alzetteRound(state, j, 31, 24, k);
-          alzetteRoundLast(state, j, 31, 24, rc, toAdd);
-
-          toAdd = alzetteRound(state, j, 17, 17, k);
-          alzetteRoundLast(state, j, 17, 17, rc, toAdd);
-
-          toAdd = alzetteRound(state, j, 0, 31, k);
-          alzetteRoundLast(state, j, 0, 31, rc, toAdd);
-
-          toAdd = alzetteRound(state, j, 24, 16, k);
-          alzetteRoundLast(state, j, 24, 16, rc, toAdd);
-        }
+      for (int j = 0; j < 2 * brans; j += 2) {
+        int rc = rcon[j >> 1];
+        alzetteRound(state, j, 31, 24, rc);
+        alzetteRound(state, j, 17, 17, rc);
+        alzetteRound(state, j, 0, 31, rc);
+        alzetteRound(state, j, 24, 16, rc);
       }
+
       for (int[] s : state) {
         binarySparkleOperations(s, brans);
       }
@@ -93,31 +84,18 @@ public final class MaskedSparkleFirstOrder {
     state[brans + 1] = y0;
   }
 
-  static int alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int index) {
-    int toAdd = rot(state[index][j + 1], shiftOne);
-    int stateJ = binaryToArithmetic(state[index][j], state[1][j]);
-    stateJ += toAdd;
-    for (int i = 0; i < state.length - 1; i++) {
-      if (i == j) {
-        continue;
-      }
-      // TODO HMM for higher order xd
-    }
-    state[index][j] = arithmeticToBinary(stateJ, state[1][j]);
-    state[index][j + 1] ^= rot(state[index][j], shiftTwo);
-    return toAdd;
-  }
-
-  // TODO FIX FOR HIGHER ORDER!
-  static void alzetteRoundLast(int[][] state, int j, int shiftOne, int shiftTwo, int rc,
-      int toAddOther) {
-    int index = state.length - 1;
-    int toAdd = rot(state[index][j + 1], shiftOne);
-    int stateJ = binaryToArithmetic(state[index][j], state[0][j]);
-    int toAddArith = binaryToArithmetic(toAdd, toAddOther);
-    state[index][j] = arithmeticToBinary(stateJ + toAddArith, state[0][j]);
-    state[index][j + 1] ^= rot(state[1][j], shiftTwo);
-    state[index][j] ^= rc;
+  static void alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int rc) {
+    int toAdd0 = rot(state[0][j + 1], shiftOne);
+    int stateJ0 = binaryToArithmetic(state[0][j], state[1][j]);
+    stateJ0 += toAdd0;
+    state[0][j] = arithmeticToBinary(stateJ0, state[1][j]);
+    state[0][j + 1] ^= rot(state[0][j], shiftTwo);
+    int toAdd1 = rot(state[1][j + 1], shiftOne);
+    int stateJ1 = binaryToArithmetic(state[1][j], state[0][j]);
+    int toAddArith = binaryToArithmetic(toAdd1, toAdd0);
+    state[1][j] = arithmeticToBinary(stateJ1 + toAddArith, state[0][j]);
+    state[1][j + 1] ^= rot(state[1][j], shiftTwo);
+    state[1][j] ^= rc;
   }
 
   public static int binaryToArithmetic(int x, int r) {

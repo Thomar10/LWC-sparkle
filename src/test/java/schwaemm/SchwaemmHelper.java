@@ -21,7 +21,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return s.toString();
   }
 
-  private static final Random random = new Random();
+  private static final Random random = new Random(123);
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength) {
     // Tests in C only goes up to 32 bits.
@@ -109,7 +109,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
     return maskByteArrays(bytes, 2);
   }
 
-  private static byte[][] maskByteArrays(byte[] bytes, int order) {
+  public static byte[][] maskByteArrays(byte[] bytes, int order) {
     byte[][] maskedBytes = new byte[order][];
     int[] intAsBytes = ConversionUtil.createIntArrayFromBytes(bytes, (bytes.length + 4 - 1) / 4);
     int[][] maskedInts = maskIntArray(intAsBytes, order);

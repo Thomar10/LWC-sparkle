@@ -49,11 +49,18 @@ public class MaskedSparkleHigherOrderTest {
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
 
-  @RepeatedTest(50)
+  @RepeatedTest(1)
   void maskedSparkleSlim256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
     int[][] state = generateRandomMaskedState(states.copy, 4);
+    int[][] state2 = new int [state.length][];
+    for (int i = 0; i < state.length; i++) {
+      state2[i] = Arrays.copyOf(state[i], state[i].length);
+    }
     MaskedSparkleHigherOrder.sparkle256Slim(state);
+    MaskedSparkleBoolean.sparkle256Slim(state2);
+    System.out.println(Arrays.toString(state[0]));
+    System.out.println(Arrays.toString(state2[0]));
     Sparkle.sparkle256Slim(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
