@@ -1,5 +1,7 @@
 package sparkle;
 
+import java.util.Random;
+
 /***
  * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf
  */
@@ -16,9 +18,9 @@ public class BooleanAddition {
         int[][] r = new int[n][n];
 
         for(int i = 0; i < n; i++){
-            for(int j = i + 1; j < n; j++){
-                //r[i][j] = random.nextInt(2);
-                r[i][j] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
+            for(int j = i + 1; j < n; j++) {
+                r[i][j] = new Random().nextInt(2);
+                r[j][i] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
             }
         }
 
