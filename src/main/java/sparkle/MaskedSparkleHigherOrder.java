@@ -81,21 +81,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     state[0][j] ^= rc; //Only XOR by constant to first share or every odd share
   }
 
-  static void alzetteRoundLast(int[][] state, int j, int shiftOne, int shiftTwo, int rc,
-      int toAddOther) {
-    if (state.length == 2) {
-      int index = state.length - 1;
-      int toAdd = rot(state[index][j + 1], shiftOne);
-      int stateJ = binaryToArithmetic(state[index][j], state[0][j]);
-      int toAddArith = binaryToArithmetic(toAdd, toAddOther);
-      state[index][j] = arithmeticToBinary(stateJ + toAddArith, state[0][j]);
-      state[index][j + 1] ^= rot(state[1][j], shiftTwo);
-      state[index][j] ^= rc;
-    } else {
-
-    }
-  }
-
   public static int[] booleanToArithmeticHigherOrder(int x[]) {
 
     int[] A = new int[x.length];
