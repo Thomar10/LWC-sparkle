@@ -52,7 +52,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   }
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int length) {
-    return prepareTest(type, 0, random);
+    return prepareTest(type, length, random);
   }
 
   public static SchwaemmHelper prepareTest(SchwaemmType type) {

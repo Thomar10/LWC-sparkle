@@ -200,7 +200,7 @@ public final class SchwaemmMasked {
       diff |= state[RATE_WORDS + i] ^ tag[i];
     }
     if (diff != 0) {
-      //throw new RuntimeException("Could not verify tag!");
+      throw new RuntimeException("Could not verify tag!");
     }
   }
 

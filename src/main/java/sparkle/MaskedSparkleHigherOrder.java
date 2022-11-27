@@ -13,30 +13,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
       -1156479509, 1333558103, -809524792, -1028445891};
   private static final Random random = new Random(123);
 
-  public void sparkle256(int[][] state) {
-    sparkle(state, 4, 10);
-  }
-
-  public void sparkle256Slim(int[][] state) {
-    sparkle(state, 4, 7);
-  }
-
-  public void sparkle384(int[][] state) {
-    sparkle(state, 6, 11);
-  }
-
-  public void sparkle384Slim(int[][] state) {
-    sparkle(state, 6, 7);
-  }
-
-  public void sparkle512(int[][] state) {
-    sparkle(state, 8, 12);
-  }
-
-  public void sparkle512Slim(int[][] state) {
-    sparkle(state, 8, 8);
-  }
-
   static int rot(int x, int n) {
     return (x >>> n) | (x << (32 - n));
   }
@@ -136,13 +112,21 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     return A;
   }
 
-  // TODO MAKE SECURE
   private static int fullXOR(int[] y) {
+    refreshMasks(y);
     int res = 0;
     for (int number : y) {
       res ^= number;
     }
     return res;
+  }
+
+  private static void refreshMasks(int[] toRefresh) {
+    for (int j = 1; j < toRefresh.length; j++) {
+      int tmp = random.nextInt(Integer.MAX_VALUE);
+      toRefresh[0] ^= tmp;
+      toRefresh[j] ^= tmp;
+    }
   }
 
   public static int[] convertAToBEven(int[] A) {
@@ -208,5 +192,29 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
       T = 2 * gamma;
     }
     return x ^ T;
+  }
+
+  public void sparkle256(int[][] state) {
+    sparkle(state, 4, 10);
+  }
+
+  public void sparkle256Slim(int[][] state) {
+    sparkle(state, 4, 7);
+  }
+
+  public void sparkle384(int[][] state) {
+    sparkle(state, 6, 11);
+  }
+
+  public void sparkle384Slim(int[][] state) {
+    sparkle(state, 6, 7);
+  }
+
+  public void sparkle512(int[][] state) {
+    sparkle(state, 8, 12);
+  }
+
+  public void sparkle512Slim(int[][] state) {
+    sparkle(state, 8, 8);
   }
 }
