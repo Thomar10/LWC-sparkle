@@ -7,8 +7,6 @@ import java.util.Random;
  */
 public class BooleanAddition {
 
-    private static final Random random = new Random();
-
 
     /***
      * Takes as input shares of x and shares of y and returns shares of z, such that z = x & y
@@ -22,8 +20,8 @@ public class BooleanAddition {
 
         for(int i = 0; i < n; i++){
             for(int j = i + 1; j < n; j++) {
-                r[i][j] = random.nextInt(2);
-                r[j][i] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
+                //r[i][j] = random.nextInt(2);
+                r[i][j] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
             }
         }
 

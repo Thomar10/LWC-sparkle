@@ -8,6 +8,7 @@ import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleHigherOrder;
 
 public final class SchwaemmMasked128128HigherOrdersTest {
@@ -15,7 +16,7 @@ public final class SchwaemmMasked128128HigherOrdersTest {
   private static final int TAG_BYTES = SchwaemmType.S128128.getTagBytes();
   private static final int STATE_WORDS = SchwaemmType.S128128.getStateSize();
   private final Schwaemm schwaemm = new Schwaemm(SchwaemmType.S128128);
-  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128, new MaskedSparkleHigherOrder());
+  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128, new MaskedSparkleBoolean());
 
   @RepeatedTest(50)
   void initializeTest() {
