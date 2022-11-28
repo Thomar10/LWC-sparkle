@@ -1,5 +1,7 @@
 package sparkle;
 
+import java.util.Arrays;
+
 /**
  * sparkle.Sparkle permutation.
  */
@@ -7,16 +9,16 @@ public final class Sparkle {
 
   public static final int maxBranches = 8;
   private static final int[] rcon =
-      new int[]{
-          -1209970334,
-          -1083090816,
-          951376470,
-          844003128,
-          -1156479509,
-          1333558103,
-          -809524792,
-          -1028445891
-      };
+          new int[]{
+                  -1209970334,
+                  -1083090816,
+                  951376470,
+                  844003128,
+                  -1156479509,
+                  1333558103,
+                  -809524792,
+                  -1028445891
+          };
 
   public static void sparkle256(int[] state) {
     sparkle(state, 4, 10);

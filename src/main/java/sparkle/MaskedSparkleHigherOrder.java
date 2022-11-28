@@ -179,27 +179,33 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     return x ^ T;
   }
 
-  public void sparkle256(int[][] state) {
-    sparkle(state, 4, 10);
+  @Override
+  public void sparkle256(int[][] stateShares) {
+    sparkle(stateShares, 4, 10);
   }
 
-  public void sparkle256Slim(int[][] state) {
-    sparkle(state, 4, 7);
+  @Override
+  public void sparkle256Slim(int[][] stateShares) {
+    sparkle(stateShares, 4, 7);
   }
 
-  public void sparkle384(int[][] state) {
-    sparkle(state, 6, 11);
+  @Override
+  public void sparkle384(int[][] stateShares) {
+    sparkle(stateShares, 6, 11);
   }
 
-  public void sparkle384Slim(int[][] state) {
-    sparkle(state, 6, 7);
+  @Override
+  public void sparkle384Slim(int[][] stateShares) {
+    sparkle(stateShares, 6, 7);
   }
 
-  public void sparkle512(int[][] state) {
-    sparkle(state, 8, 12);
+  @Override
+  public void sparkle512(int[][] stateShares) {
+    sparkle(stateShares, 8, 12);
   }
 
-  public void sparkle512Slim(int[][] state) {
-    sparkle(state, 8, 8);
+  @Override
+  public void sparkle512Slim(int[][] stateShares) {
+    sparkle(stateShares, 8, 8);
   }
 }

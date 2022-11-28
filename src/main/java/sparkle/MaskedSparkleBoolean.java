@@ -14,26 +14,32 @@ public class MaskedSparkleBoolean implements MaskedSparkle {
                     -1028445891
             };
 
+    @Override
     public void sparkle256(int[][] stateShares) {
         sparkle(stateShares, 4, 10);
     }
 
+    @Override
     public void sparkle256Slim(int[][] stateShares) {
         sparkle(stateShares, 4, 7);
     }
 
+    @Override
     public void sparkle384(int[][] stateShares) {
         sparkle(stateShares, 6, 11);
     }
 
+    @Override
     public void sparkle384Slim(int[][] stateShares) {
         sparkle(stateShares, 6, 7);
     }
 
+    @Override
     public void sparkle512(int[][] stateShares) {
         sparkle(stateShares, 8, 12);
     }
 
+    @Override
     public void sparkle512Slim(int[][] stateShares) {
         sparkle(stateShares, 8, 8);
     }
