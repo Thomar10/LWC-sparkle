@@ -1,9 +1,14 @@
 package sparkle;
 
+import java.util.Random;
+
 /***
  * http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf
  */
 public class BooleanAddition {
+
+    private static final Random random = new Random();
+
 
     /***
      * Takes as input shares of x and shares of y and returns shares of z, such that z = x & y
@@ -11,14 +16,14 @@ public class BooleanAddition {
      * @param y shares of y
      * @return shares of z
      */
-    public static int[] secureBooleanAnd(int[] x, int[] y){
+    public static int[] secureBooleanAnd(int[] x, int[] y) {
         int n = x.length;
         int[][] r = new int[n][n];
 
         for(int i = 0; i < n; i++){
-            for(int j = i + 1; j < n; j++){
-                //r[i][j] = random.nextInt(2);
-                r[i][j] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
+            for(int j = i + 1; j < n; j++) {
+                r[i][j] = random.nextInt(2);
+                r[j][i] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
             }
         }
 
