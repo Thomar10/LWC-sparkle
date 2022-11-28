@@ -9,6 +9,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.infra.Blackhole;
 import sparkle.MaskedSparkle;
 import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
@@ -27,10 +28,11 @@ public class MaskedSparkleBenchmark {
    */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void maskedConversionSparkle256(ExecutionPlan plan) {
+  public void maskedConversionSparkle256(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
       plan.conversionSparkle.sparkle256(state);
+      blackhole.consume(state);
     }
   }
 
@@ -41,10 +43,11 @@ public class MaskedSparkleBenchmark {
    */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void maskedBooleanSparkle256(ExecutionPlan plan) {
+  public void maskedBooleanSparkle256(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
       plan.booleanSparkle.sparkle256(state);
+      blackhole.consume(state);
     }
   }
 
@@ -68,7 +71,7 @@ public class MaskedSparkleBenchmark {
 
     public static final int COUNT = 13;
 
-    @Param({"10000"})
+    @Param({"100"})
     private int iterations;
 
     private static Random random = new Random(1234);

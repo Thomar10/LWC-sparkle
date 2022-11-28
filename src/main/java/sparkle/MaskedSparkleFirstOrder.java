@@ -97,18 +97,12 @@ public final class MaskedSparkleFirstOrder implements MaskedSparkle{
     int toAdd = rot(state[index][j + 1], shiftOne);
     int stateJ = binaryToArithmetic(state[index][j], state[1][j]);
     stateJ += toAdd;
-    for (int i = 0; i < state.length - 1; i++) {
-      if (i == j) {
-        continue;
-      }
-      // TODO HMM for higher order xd
-    }
+
     state[index][j] = arithmeticToBinary(stateJ, state[1][j]);
     state[index][j + 1] ^= rot(state[index][j], shiftTwo);
     return toAdd;
   }
 
-  // TODO FIX FOR HIGHER ORDER!
   static void alzetteRoundLast(int[][] state, int j, int shiftOne, int shiftTwo, int rc,
       int toAddOther) {
     int index = state.length - 1;
