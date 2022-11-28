@@ -65,13 +65,6 @@ public class MaskedSparkleKoggeStoneTest {
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
   }
 
-  @RepeatedTest(10)
-  void generateAndRecover() {
-    RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-    int[][] state = generateRandomMaskedState(states.copy);
-    Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
-  }
-
   record RandomMaskedState(int[] stateNormal, int[] copy) {
 
     static RandomMaskedState generateRandomMaskedState() {

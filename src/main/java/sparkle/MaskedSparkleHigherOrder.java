@@ -82,7 +82,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
   }
 
   public static int[] booleanToArithmeticHigherOrder(int x[]) {
-
     int[] A = new int[x.length];
     int[] ADot = new int[x.length];
     for (int i = 0; i < A.length - 1; i++) {
@@ -90,7 +89,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
       A[i] = rand;
       ADot[i] = -rand;
     }
-
     int[] y = convertAToB(ADot);
     int[] z = BooleanAddition.secureBooleanAdditionGoubin(x, y);
     A[A.length - 1] = fullXOR(z);
@@ -130,7 +128,20 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
   }
 
   public static int[] convertAToBOdd(int[] A) {
-    throw new RuntimeException("FUCK OFF :'( I DONT KNOW HOW");
+    if (A.length == 1) {
+      return A;
+    }
+
+    int[] aLower = Arrays.copyOf(A, A.length / 2);
+    int[] x = convertAToBEven(aLower);
+    int[] xDot = expand(x);
+    int[] aUpper = Arrays.copyOfRange(A, A.length / 2, A.length);
+    int[] y = convertAToBEven(aUpper);
+    int[] yDot = expand(y);
+    int[] newX = Arrays.copyOf(xDot, A.length);
+    int[] newY = Arrays.copyOfRange(yDot, 0, A.length);
+
+    return BooleanAddition.secureBooleanAdditionGoubin(newX, newY);
   }
 
   public static int[] convertAToB(int[] A) {
@@ -141,42 +152,11 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     int[] y = new int[elements.length * 2];
     for (int i = 0; i < elements.length; i++) {
       int r = random.nextInt(Integer.MAX_VALUE);
-      y[2 * i] = elements[i] ^ r;
-      y[2 * i + 1] = r;
+      // TODO RANDOMNESS???
+      y[2 * i] = elements[i]; // ^ r;
+      //y[2 * i + 1] = r;
     }
     return y;
-  }
-
-  public static int binaryToArithmetic(int x, int r) {
-    int gamma = random.nextInt(Integer.MAX_VALUE);
-    int T = x ^ gamma;
-    T = T - gamma;
-    T = T ^ x;
-    gamma = gamma ^ r;
-    int A = x ^ gamma;
-    A = A - gamma;
-    return (A ^ T);
-  }
-
-  public static int arithmeticToBinary(int A, int r) {
-    int gamma = random.nextInt(Integer.MAX_VALUE);
-    int T = 2 * gamma;
-    int x = gamma ^ r;
-    int omega = gamma & x;
-    x = T ^ A;
-    gamma = gamma ^ x;
-    gamma = gamma & r;
-    omega = omega ^ gamma;
-    gamma = T & A;
-    omega = omega ^ gamma;
-    for (int k = 1; k < 32; k++) {
-      gamma = T & r;
-      gamma = gamma ^ omega;
-      T = T & A;
-      gamma = gamma ^ T;
-      T = 2 * gamma;
-    }
-    return x ^ T;
   }
 
   @Override

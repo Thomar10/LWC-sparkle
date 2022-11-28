@@ -20,6 +20,7 @@ public class BooleanAddition {
 
         for(int i = 0; i < n; i++){
             for(int j = i + 1; j < n; j++) {
+                // TODO RANDOMNESS???
                 //r[i][j] = random.nextInt(2);
                 r[i][j] = (r[i][j] ^ (x[i] & y[j])) ^ (x[j] & y[i]);
             }

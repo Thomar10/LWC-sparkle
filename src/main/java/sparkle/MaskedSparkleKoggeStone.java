@@ -70,19 +70,6 @@ public final class MaskedSparkleKoggeStone implements MaskedSparkle {
         state[1][j] ^= rc;
     }
 
-    static int[] recoverState(int[][] state) {
-        int[] result = new int[state[0].length];
-        for (int i = 0; i < state[0].length; i++) {
-            int resultMask = state[0][i];
-            for (int j = 1; j < state.length; j++) {
-                resultMask ^= state[j][i];
-            }
-            result[i] = resultMask;
-        }
-        return result;
-    }
-
-
     public static int koggeStoneMaskedAddition(int x, int y, int r, int s) {
         int n = 5;
         int t = random.nextInt(Integer.MAX_VALUE);
