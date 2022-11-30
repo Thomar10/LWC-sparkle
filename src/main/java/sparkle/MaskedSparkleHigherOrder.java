@@ -128,9 +128,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
   }
 
   public static int[] convertAToBOdd(int[] A) {
-    if (A.length == 1) {
-      return A;
-    }
 
     int[] aLower = Arrays.copyOf(A, A.length / 2);
     int[] x = convertAToBEven(aLower);
@@ -138,10 +135,9 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     int[] aUpper = Arrays.copyOfRange(A, A.length / 2, A.length);
     int[] y = convertAToBEven(aUpper);
     int[] yDot = expand(y);
-    int[] newX = Arrays.copyOf(xDot, A.length);
-    int[] newY = Arrays.copyOfRange(yDot, 0, A.length);
+    int[] newX = Arrays.copyOf(xDot, A.length + 1);
 
-    return BooleanAddition.secureBooleanAdditionGoubin(newX, newY);
+    return Arrays.copyOf(BooleanAddition.secureBooleanAdditionGoubin(newX, yDot), A.length);
   }
 
   public static int[] convertAToB(int[] A) {
@@ -152,9 +148,8 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
     int[] y = new int[elements.length * 2];
     for (int i = 0; i < elements.length; i++) {
       int r = random.nextInt(Integer.MAX_VALUE);
-      // TODO RANDOMNESS???
-      y[2 * i] = elements[i]; // ^ r;
-      //y[2 * i + 1] = r;
+      y[2 * i] = elements[i] ^ r;
+      y[2 * i + 1] = r;
     }
     return y;
   }

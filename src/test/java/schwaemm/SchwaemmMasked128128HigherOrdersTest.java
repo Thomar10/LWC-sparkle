@@ -16,7 +16,8 @@ public final class SchwaemmMasked128128HigherOrdersTest {
   private static final int TAG_BYTES = SchwaemmType.S128128.getTagBytes();
   private static final int STATE_WORDS = SchwaemmType.S128128.getStateSize();
   private final Schwaemm schwaemm = new Schwaemm(SchwaemmType.S128128);
-  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128, new MaskedSparkleHigherOrder());
+  private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128,
+      new MaskedSparkleHigherOrder());
 
   @RepeatedTest(50)
   void initializeTest() {
@@ -88,10 +89,10 @@ public final class SchwaemmMasked128128HigherOrdersTest {
     Assertions.assertThat(SchwaemmHelper.recoverByteArrays(maskedTag)).isEqualTo(tag);
   }
 
-  @RepeatedTest(50)
+  @RepeatedTest(1)
   void encryptAndDecryptMaskedAndUnmasked() {
     SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128);
-    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 5);
+    SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 3);
 
     schwaemm.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),

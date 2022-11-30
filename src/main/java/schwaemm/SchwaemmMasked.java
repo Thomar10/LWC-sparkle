@@ -2,6 +2,7 @@ package schwaemm;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+
 import sparkle.MaskedSparkle;
 import util.ConversionUtil;
 
@@ -93,6 +94,31 @@ public final class SchwaemmMasked {
     CONST_M3 = (3 ^ (1 << CAP_BRANS)) << 24;
   }
 
+  static int[] recoverState(int[][] state) {
+    int[] result = new int[state[0].length];
+    for (int i = 0; i < state[0].length; i++) {
+      int resultMask = state[0][i];
+      for (int j = 1; j < state.length; j++) {
+        resultMask ^= state[j][i];
+      }
+      result[i] = resultMask;
+    }
+    return result;
+  }
+
+  public static byte[] recoverByteArrays(byte[][] bytes) {
+    int[][] maskedInts = new int[bytes.length][(bytes[0].length - 1) / 4 + 1];
+    for (int i = 0; i < bytes.length; i++) {
+      maskedInts[i] = ConversionUtil.createIntArrayFromBytes(bytes[i],
+          (bytes[0].length - 1) / 4 + 1);
+    }
+    int[] recoveredInts = recoverState(maskedInts);
+    byte[] recoveredBytes = new byte[bytes[0].length];
+    ConversionUtil.populateByteArrayFromInts(recoveredInts, recoveredBytes, 0,
+        recoveredBytes.length, 0);
+    return recoveredBytes;
+  }
+
   public byte[][] decryptAndVerify(byte[][] cipher, byte[][] assoData, byte[][] key,
       byte[][] nonce) {
     int[][] state = new int[key.length][STATE_WORDS];
@@ -106,14 +132,39 @@ public final class SchwaemmMasked {
       decrypt(state, message, cipher);
     }
     finalize(state, key);
+
+    int[][] tags = reconstructTag(cipher, cipherTextLength);
+    int[] diffArray = new int[tags[0].length];
     for (int i = 0; i < cipher.length; i++) {
       verifyTag(
-          state[i],
-          ConversionUtil.createIntArrayFromBytes(
-              Arrays.copyOfRange(cipher[i], cipherTextLength, cipher[0].length),
-              type.getVerifyTagLength()));
+          state[i], tags[i], diffArray);
+
     }
+    int diff = 0;
+    for (int number : diffArray) {
+      diff ^= number;
+    }
+//    if (diff != 0) {
+//      throw new RuntimeException("Could not verify tag!");
+//    }
     return message;
+  }
+
+  void verifyTag(int[] state, int[] tag, int[] diff) {
+    for (int i = 0; i < (TAG_BYTES / 4); i++) {
+      diff[i] = state[RATE_WORDS + i] ^ tag[i] ^ diff[i];
+    }
+
+  }
+
+  int[][] reconstructTag(byte[][] cipher, int tagStart) {
+    byte[] tagBytes = recoverByteArrays(cipher);
+    int[] tag = ConversionUtil.createIntArrayFromBytes(
+        Arrays.copyOfRange(tagBytes, tagStart, cipher[0].length),
+        type.getVerifyTagLength());
+    int[][] tags = new int[cipher.length][tag.length];
+    tags[0] = tag;
+    return tags;
   }
 
   void decrypt(int[][] state, byte[][] message, byte[][] cipher) {
@@ -194,15 +245,6 @@ public final class SchwaemmMasked {
     }
   }
 
-  void verifyTag(int[] state, int[] tag) {
-    int diff = 0;
-    for (int i = 0; i < (TAG_BYTES / 4); i++) {
-      diff |= state[RATE_WORDS + i] ^ tag[i];
-    }
-    if (diff != 0) {
-      throw new RuntimeException("Could not verify tag!");
-    }
-  }
 
   public void encryptAndTag(byte[][] message, byte[][] cipher, byte[][] assoData, byte[][] key,
       byte[][] nonce) {
