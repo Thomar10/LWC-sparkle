@@ -2,9 +2,13 @@ package benchmarks;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -13,6 +17,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import sparkle.MaskedSparkle;
 import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
+import sparkle.MaskedSparkleKoggeStone;
 import sparkle.Sparkle;
 
 public class MaskedSparkleBenchmark {
@@ -28,6 +33,8 @@ public class MaskedSparkleBenchmark {
    */
   @Fork(value = 1, warmups = 1)
   @Benchmark
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  @BenchmarkMode(Mode.AverageTime)
   public void maskedConversionSparkle256(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
@@ -43,10 +50,29 @@ public class MaskedSparkleBenchmark {
    */
   @Fork(value = 1, warmups = 1)
   @Benchmark
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  @BenchmarkMode(Mode.AverageTime)
   public void maskedBooleanSparkle256(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
       plan.booleanSparkle.sparkle256(state);
+      blackhole.consume(state);
+    }
+  }
+
+  /**
+   * Benchmarks implementation of kogge masked sparkle 256.
+   *
+   * @param plan an execution plan
+   */
+  @Fork(value = 1, warmups = 1)
+  @Benchmark
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  @BenchmarkMode(Mode.AverageTime)
+  public void maskedKoggeSparkle256(ExecutionPlan plan, Blackhole blackhole) {
+    for (int i = plan.iterations; i > 0; i--) {
+      int[][] state = selectState(i % 34, plan);
+      plan.koggeSparkle.sparkle256(state);
       blackhole.consume(state);
     }
   }
@@ -68,14 +94,14 @@ public class MaskedSparkleBenchmark {
 
     private final MaskedSparkle conversionSparkle = new MaskedSparkleFirstOrder();
     private final MaskedSparkle booleanSparkle = new MaskedSparkleBoolean();
+    private final MaskedSparkle koggeSparkle = new MaskedSparkleKoggeStone();
 
     public static final int COUNT = 13;
 
-    @Param({"100"})
+    @Param({"10"})
     private int iterations;
 
     private static Random random = new Random(1234);
-
 
     private final int[][][] states = new int[COUNT][][];
 
