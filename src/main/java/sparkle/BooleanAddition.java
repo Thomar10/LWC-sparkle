@@ -57,7 +57,7 @@ public class BooleanAddition {
             a[i] = x[i] ^ y[i];
         }
 
-        for (int j = 1; j < k; j++) {
+        for (int j = 0; j < k; j++) {
             int[] ua = secureBooleanAnd(u, a);
 
             for (int i = 0; i < n; i++) {
