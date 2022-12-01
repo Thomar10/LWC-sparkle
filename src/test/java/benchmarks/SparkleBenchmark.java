@@ -18,18 +18,14 @@ public class SparkleBenchmark {
     org.openjdk.jmh.Main.main(args);
   }
 
-  /**
-   * Benchmarks implementation of sparkle 256.
-   *
-   * @param plan an execution plan
-   * @param blackhole a black hole
-   */
+
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void sparkle256(ExecutionPlan plan, Blackhole blackhole) {
+  public void sparkle(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[] state = selectState(i % 34, plan);
       Sparkle.sparkle256(state);
+      blackhole.consume(state);
     }
   }
 

@@ -2,13 +2,9 @@ package benchmarks;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -17,6 +13,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import sparkle.MaskedSparkle;
 import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
+import sparkle.MaskedSparkleHigherOrder;
 import sparkle.MaskedSparkleKoggeStone;
 import sparkle.Sparkle;
 
@@ -26,33 +23,31 @@ public class MaskedSparkleBenchmark {
     org.openjdk.jmh.Main.main(args);
   }
 
-  /**
-   * Benchmarks implementation of conversion masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
+
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @BenchmarkMode(Mode.AverageTime)
-  public void maskedConversionSparkle256(ExecutionPlan plan, Blackhole blackhole) {
+  public void maskedFirstOrderSparkle(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
-      plan.conversionSparkle.sparkle256(state);
+      plan.firstOrderSparkle.sparkle256(state);
       blackhole.consume(state);
     }
   }
 
-  /**
-   * Benchmarks implementation of boolean masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @BenchmarkMode(Mode.AverageTime)
-  public void maskedBooleanSparkle256(ExecutionPlan plan, Blackhole blackhole) {
+  public void maskedHigherOrderSparkle(ExecutionPlan plan, Blackhole blackhole) {
+    for (int i = plan.iterations; i > 0; i--) {
+      int[][] state = selectState(i % 34, plan);
+      plan.higherOrderSparkle.sparkle256(state);
+      blackhole.consume(state);
+    }
+  }
+
+
+  @Fork(value = 1, warmups = 1)
+  @Benchmark
+  public void maskedBooleanSparkle(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
       plan.booleanSparkle.sparkle256(state);
@@ -60,16 +55,10 @@ public class MaskedSparkleBenchmark {
     }
   }
 
-  /**
-   * Benchmarks implementation of kogge masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
+
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @BenchmarkMode(Mode.AverageTime)
-  public void maskedKoggeSparkle256(ExecutionPlan plan, Blackhole blackhole) {
+  public void maskedKoggeSparkle(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       int[][] state = selectState(i % 34, plan);
       plan.koggeSparkle.sparkle256(state);
@@ -77,28 +66,24 @@ public class MaskedSparkleBenchmark {
     }
   }
 
-  /**
-   * Selects the next state to be benchmarked.
-   *
-   * @param index index for lookup
-   * @param plan an execution plan
-   * @return state
-   */
   private int[][] selectState(int index, ExecutionPlan plan) {
     return plan.states[index % ExecutionPlan.COUNT];
   }
 
-  /** ExecutionPlan class. */
+  /**
+   * ExecutionPlan class.
+   */
   @State(Scope.Benchmark)
   public static class ExecutionPlan {
 
-    private final MaskedSparkle conversionSparkle = new MaskedSparkleFirstOrder();
+    private final MaskedSparkle firstOrderSparkle = new MaskedSparkleFirstOrder();
+    private final MaskedSparkle higherOrderSparkle = new MaskedSparkleHigherOrder();
     private final MaskedSparkle booleanSparkle = new MaskedSparkleBoolean();
     private final MaskedSparkle koggeSparkle = new MaskedSparkleKoggeStone();
 
     public static final int COUNT = 13;
 
-    @Param({"10"})
+    @Param({"10000"})
     private int iterations;
 
     private static Random random = new Random(1234);

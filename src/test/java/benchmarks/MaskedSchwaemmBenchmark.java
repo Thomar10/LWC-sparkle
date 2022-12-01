@@ -15,6 +15,8 @@ import schwaemm.SchwaemmMasked;
 import schwaemm.SchwaemmType;
 import sparkle.MaskedSparkleBoolean;
 import sparkle.MaskedSparkleFirstOrder;
+import sparkle.MaskedSparkleHigherOrder;
+import sparkle.MaskedSparkleKoggeStone;
 
 public class MaskedSchwaemmBenchmark {
 
@@ -22,90 +24,114 @@ public class MaskedSchwaemmBenchmark {
     org.openjdk.jmh.Main.main(args);
   }
 
-  /**
-   * Benchmarks implementation of boolean masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
+
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void schwaemm128128BooleanEncrypt(ExecutionPlan plan) {
+  public void schwaemmEncryptBoolean(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       SchwaemmHelper.MaskedData data = selectState(i % 34, plan);
-      plan.schwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(), data.key(),
+      plan.booleanSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
           data.nonce());
+      blackhole.consume(data);
     }
   }
 
-  /**
-   * Benchmarks implementation of conversion masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void schwaemm128128ConversionEncrypt(ExecutionPlan plan) {
+  public void schwaemmEncryptFirstOrder(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       SchwaemmHelper.MaskedData data = selectState(i % 34, plan);
-      plan.schwaemmConversion.encryptAndTag(data.message(), data.cipher(), data.associate(), data.key(),
+      plan.firstOrderSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
           data.nonce());
+      blackhole.consume(data);
+
     }
   }
 
-  /**
-   * Benchmarks implementation of boolean masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void schwaemm128128BooleanEncryptDecrypt(ExecutionPlan plan, Blackhole blackhole) {
+  public void schwaemmEncryptKoggeStone(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       SchwaemmHelper.MaskedData data = selectState(i % 34, plan);
-      plan.schwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(), data.key(),
+      plan.koggeStoneSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
           data.nonce());
-      blackhole.consume(
-          plan.schwaemmConversion.decryptAndVerify(data.cipher(), data.associate(), data.key(),
-              data.nonce()));
+      blackhole.consume(data);
     }
   }
 
-  /**
-   * Benchmarks implementation of conversion masked sparkle 256.
-   *
-   * @param plan an execution plan
-   */
   @Fork(value = 1, warmups = 1)
   @Benchmark
-  public void schwaemm128128ConversionEncryptDecrypt(ExecutionPlan plan, Blackhole blackhole) {
+  public void schwaemmEncryptHigherOrder(ExecutionPlan plan, Blackhole blackhole) {
     for (int i = plan.iterations; i > 0; i--) {
       SchwaemmHelper.MaskedData data = selectState(i % 34, plan);
-      plan.schwaemmConversion.encryptAndTag(data.message(), data.cipher(), data.associate(), data.key(),
+      plan.higherOrderSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
           data.nonce());
-      blackhole.consume(
-          plan.schwaemmConversion.decryptAndVerify(data.cipher(), data.associate(), data.key(),
-              data.nonce()));
+      blackhole.consume(data);
+
     }
   }
+
+
+  @Fork(value = 1, warmups = 1)
+  @Benchmark
+  public void schwaemmEncryptHigherOrder4(ExecutionPlan plan, Blackhole blackhole) {
+    for (int i = plan.iterations; i > 0; i--) {
+      SchwaemmHelper.MaskedData data = selectState4(i % 34, plan);
+      plan.higherOrderSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
+          data.nonce());
+      blackhole.consume(data);
+
+    }
+  }
+
+  @Fork(value = 1, warmups = 1)
+  @Benchmark
+  public void schwaemmEncryptBoolean4(ExecutionPlan plan, Blackhole blackhole) {
+    for (int i = plan.iterations; i > 0; i--) {
+      SchwaemmHelper.MaskedData data = selectState4(i % 34, plan);
+      plan.higherOrderSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+          data.key(),
+          data.nonce());
+      blackhole.consume(data);
+
+    }
+  }
+
 
   /**
    * Selects the next state to be benchmarked.
    *
    * @param index index for lookup
-   * @param plan an execution plan
+   * @param plan  an execution plan
    * @return state
    */
   private SchwaemmHelper.MaskedData selectState(int index, ExecutionPlan plan) {
     return plan.data[index % ExecutionPlan.COUNT];
   }
 
-  /** ExecutionPlan class. */
+  private SchwaemmHelper.MaskedData selectState4(int index, ExecutionPlan plan) {
+    return plan.data4[index % ExecutionPlan.COUNT];
+  }
+
+  /**
+   * ExecutionPlan class.
+   */
   @State(Scope.Benchmark)
   public static class ExecutionPlan {
 
-    private final SchwaemmMasked schwaemm = new SchwaemmMasked(SchwaemmType.S128128, new MaskedSparkleBoolean());
-
-    private final SchwaemmMasked schwaemmConversion = new SchwaemmMasked(SchwaemmType.S128128, new MaskedSparkleFirstOrder());
+    private final SchwaemmMasked booleanSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
+        new MaskedSparkleBoolean());
+    private final SchwaemmMasked firstOrderSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
+        new MaskedSparkleFirstOrder());
+    private final SchwaemmMasked koggeStoneSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
+        new MaskedSparkleKoggeStone());
+    private final SchwaemmMasked higherOrderSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
+        new MaskedSparkleHigherOrder());
 
     public static final int COUNT = 13;
 
@@ -115,12 +141,14 @@ public class MaskedSchwaemmBenchmark {
     private static Random random = new Random(1234);
 
     private final SchwaemmHelper.MaskedData[] data = new SchwaemmHelper.MaskedData[COUNT];
+    private final SchwaemmHelper.MaskedData[] data4 = new SchwaemmHelper.MaskedData[COUNT];
 
     /** Setup method for benchmarks. */
     @Setup(Level.Invocation)
     public void setUp() {
       for (int i = 0; i < COUNT; i++) {
         data[i] = SchwaemmHelper.prepareBenchmarkMasked(SchwaemmType.S128128, random, 2);
+        data4[i] = SchwaemmHelper.prepareBenchmarkMasked(SchwaemmType.S128128, random, 4);
       }
     }
   }

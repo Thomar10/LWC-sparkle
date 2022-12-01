@@ -17,7 +17,7 @@ public final class SchwaemmMasked128128HigherOrdersTest {
   private static final int STATE_WORDS = SchwaemmType.S128128.getStateSize();
   private final Schwaemm schwaemm = new Schwaemm(SchwaemmType.S128128);
   private final SchwaemmMasked schwaemmMasked = new SchwaemmMasked(SchwaemmType.S128128,
-      new MaskedSparkleHigherOrder());
+      new MaskedSparkleBoolean());
 
   @RepeatedTest(50)
   void initializeTest() {

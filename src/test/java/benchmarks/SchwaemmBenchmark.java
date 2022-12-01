@@ -28,28 +28,10 @@ public class SchwaemmBenchmark {
       SchwaemmHelper data = selectData(i % 34, plan);
       plan.schwaemm.encryptAndTag(data.message(), data.cipherJava(), data.associate(), data.key(),
           data.nonce());
+      blackhole.consume(data);
     }
   }
 
-  @Fork(value = 1, warmups = 1)
-  @Benchmark
-  public void schwaemm128128EncryptDecrypt(ExecutionPlan plan, Blackhole blackhole) {
-    for (int i = plan.iterations; i > 0; i--) {
-      SchwaemmHelper data = selectData(i % 34, plan);
-      plan.schwaemm.encryptAndTag(data.message(), data.cipherJava(), data.associate(), data.key(),
-          data.nonce());
-      blackhole.consume(
-          plan.schwaemm.decryptAndVerify(data.cipherJava(), data.associate(), data.key(), data.nonce()));
-    }
-  }
-
-  /**
-   * Selects the next state to be benchmarked.
-   *
-   * @param index index for lookup
-   * @param plan an execution plan
-   * @return state
-   */
   private SchwaemmHelper selectData(int index, ExecutionPlan plan) {
     return plan.data[index % ExecutionPlan.COUNT];
   }
