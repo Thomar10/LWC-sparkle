@@ -62,19 +62,19 @@ public final class MaskedSparkleFirstOrder implements MaskedSparkle {
 
     static void alzetteRound(int[][] state, int j, int shiftOne, int shiftTwo, int rc) {
         int toAdd0 = rot(state[0][j + 1], shiftOne);
-        int stateJ0 = binaryToArithmetic(state[0][j], state[1][j]);
+        int stateJ0 = booleanToArithmetic(state[0][j], state[1][j]);
         stateJ0 += toAdd0;
-        state[0][j] = arithmeticToBinary(stateJ0, state[1][j]);
+        state[0][j] = arithmeticToBoolean(stateJ0, state[1][j]);
         state[0][j + 1] ^= rot(state[0][j], shiftTwo);
         int toAdd1 = rot(state[1][j + 1], shiftOne);
-        int stateJ1 = binaryToArithmetic(state[1][j], state[0][j]);
-        int toAddArith = binaryToArithmetic(toAdd1, toAdd0);
-        state[1][j] = arithmeticToBinary(stateJ1 + toAddArith, state[0][j]);
+        int stateJ1 = booleanToArithmetic(state[1][j], state[0][j]);
+        int toAddArith = booleanToArithmetic(toAdd1, toAdd0);
+        state[1][j] = arithmeticToBoolean(stateJ1 + toAddArith, state[0][j]);
         state[1][j + 1] ^= rot(state[1][j], shiftTwo);
         state[1][j] ^= rc;
     }
 
-    public static int binaryToArithmetic(int x, int r) {
+    public static int booleanToArithmetic(int x, int r) {
         long gamma = random.nextInt(Integer.MAX_VALUE);
         long T = x ^ gamma;
         T = T - gamma;
@@ -85,7 +85,7 @@ public final class MaskedSparkleFirstOrder implements MaskedSparkle {
         return (int) (A ^ T);
     }
 
-    public static int arithmeticToBinary(int A, int r) {
+    public static int arithmeticToBoolean(int A, int r) {
         int gamma = random.nextInt(Integer.MAX_VALUE);
         int T = 2 * gamma;
         int x = gamma ^ r;
