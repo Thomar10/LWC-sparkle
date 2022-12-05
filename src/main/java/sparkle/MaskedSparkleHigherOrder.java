@@ -128,16 +128,22 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
   }
 
   public static int[] convertAToBOdd(int[] A) {
-
-    int[] aLower = Arrays.copyOf(A, A.length / 2);
-    int[] x = convertAToBEven(aLower);
+    if (A.length == 1) {
+      return A;
+    }
+    int[] x = convertAToBOdd(Arrays.copyOf(A, A.length / 2));
     int[] xDot = expand(x);
-    int[] aUpper = Arrays.copyOfRange(A, A.length / 2, A.length);
-    int[] y = convertAToBEven(aUpper);
+    int[] y = convertAToBOdd(Arrays.copyOfRange(A, A.length / 2, A.length));
     int[] yDot = expand(y);
-    int[] newX = Arrays.copyOf(xDot, A.length + 1);
+    if (xDot.length < yDot.length) {
+      xDot = Arrays.copyOf(xDot, A.length + 1);
+    }
+    int[] ints = BooleanAddition.secureBooleanAdditionGoubin(xDot, yDot);
 
-    return Arrays.copyOf(BooleanAddition.secureBooleanAdditionGoubin(newX, yDot), A.length);
+    ints[ints.length - 2] ^= ints[ints.length - 1];
+    ints[ints.length - 1] = 0;
+
+    return ints;
   }
 
   public static int[] convertAToB(int[] A) {

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Random;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 public class MaskedSparkleHigherOrderTest {
 
@@ -45,7 +46,7 @@ public class MaskedSparkleHigherOrderTest {
   @RepeatedTest(50)
   void maskedSparkle256() {
     RandomMaskedState states = RandomMaskedState.generateRandomMaskedState();
-    int[][] state = generateRandomMaskedState(states.copy, 4);
+    int[][] state = generateRandomMaskedState(states.copy, 5);
     sparkle.sparkle256(state);
     Sparkle.sparkle256(states.stateNormal);
     Assertions.assertThat(states.stateNormal).isEqualTo(recoverState(state));
