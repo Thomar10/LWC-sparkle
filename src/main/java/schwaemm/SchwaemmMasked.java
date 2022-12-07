@@ -2,7 +2,6 @@ package schwaemm;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
-
 import sparkle.MaskedSparkle;
 import util.ConversionUtil;
 
@@ -133,52 +132,48 @@ public final class SchwaemmMasked {
     }
     finalize(state, key);
 
-    int[][] tags = reconstructTag(cipher, cipherTextLength);
-    int[] diffArray = new int[tags[0].length];
-    for (int i = 0; i < cipher.length; i++) {
-      verifyTag(
-          state[i], tags[i], diffArray);
+    int[] tags = reconstructTag(cipher, cipherTextLength);
 
+    int diff = verifyTag(
+        state[0], tags);
+    for (int i = 1; i < cipher.length; i++) {
+      for (int j = 0; j < (TAG_BYTES / 4); j++) {
+        diff ^= state[i][RATE_WORDS + j];
+      }
     }
-    int diff = 0;
-    for (int number : diffArray) {
-      diff ^= number;
+    if (diff != 0) {
+      throw new RuntimeException("Could not verify tag!");
     }
-//    if (diff != 0) {
-//      throw new RuntimeException("Could not verify tag!");
-//    }
     return message;
   }
 
-  void verifyTag(int[] state, int[] tag, int[] diff) {
+  int verifyTag(int[] state, int[] tag) {
+    int diff = 0;
     for (int i = 0; i < (TAG_BYTES / 4); i++) {
-      diff[i] = state[RATE_WORDS + i] ^ tag[i] ^ diff[i];
+      diff ^= state[RATE_WORDS + i] ^ tag[i];
     }
-
+    return diff;
   }
 
-  int[][] reconstructTag(byte[][] cipher, int tagStart) {
+  int[] reconstructTag(byte[][] cipher, int tagStart) {
     byte[] tagBytes = recoverByteArrays(cipher);
-    int[] tag = ConversionUtil.createIntArrayFromBytes(
+    return ConversionUtil.createIntArrayFromBytes(
         Arrays.copyOfRange(tagBytes, tagStart, cipher[0].length),
         type.getVerifyTagLength());
-    int[][] tags = new int[cipher.length][tag.length];
-    tags[0] = tag;
-    return tags;
   }
 
   void decrypt(int[][] state, byte[][] message, byte[][] cipher) {
     int[][] cipherAsInt = new int[state.length][];
     for (int i = 0; i < state.length; i++) {
-      cipherAsInt[i] = ConversionUtil.createIntArrayFromBytes(
-          Arrays.copyOfRange(cipher[i], 0, cipher[0].length - TAG_BYTES),
-          (message[0].length - 1) / 4 + 1);
+      cipherAsInt[i] = ConversionUtil.createIntArrayFromBytesLen(
+          cipher[i],
+          (message[0].length - 1) / 4 + 1,
+          cipher[0].length - TAG_BYTES);
     }
 
     int index = 0;
     int messageIndex = 0;
     int cipherLength = message[0].length;
-    int cipherAsIntLength = cipherAsInt[0].length;
     boolean slimSparkle = message[0].length > RATE_BYTES;
     for (int i = 0; i < state.length; i++) {
       index = 0;
@@ -186,7 +181,7 @@ public final class SchwaemmMasked {
       cipherLength = message[0].length;
       while (cipherLength > RATE_BYTES) {
         int[] messageInt = new int[state[0].length / 2];
-        rhoWhiDec(state, Arrays.copyOfRange(cipherAsInt[i], index, cipherAsIntLength), messageInt,
+        rhoWhiDec(state, cipherAsInt[i], index, messageInt,
             messageIndex, i);
         cipherLength -= RATE_BYTES;
         index += RATE_BYTES / 4;
@@ -199,30 +194,47 @@ public final class SchwaemmMasked {
     }
 
     state[0][STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
-    rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt[0], index, cipherAsIntLength),
+    rhoWhiDecLast0(state, cipherAsInt[0], index,
         cipherLength,
-        message[0], messageIndex, 0);
+        message[0], messageIndex);
     for (int i = 1; i < state.length; i++) {
-      rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt[i], index, cipherAsIntLength),
+      rhoWhiDecLast(state, cipherAsInt[i], index,
           cipherLength,
           message[i], messageIndex, i);
     }
     sparkle.accept(state);
   }
 
-  private void rhoWhiDecLast(int[][] state, int[] data, int length, byte[] cipher, int cipherIndex,
+  private void rhoWhiDecLast0(int[][] state, int[] data, int dataIndex, int length, byte[] cipher,
+      int cipherIndex) {
+    int[] buffer = new int[RATE_WORDS];
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
+
+    if (length < RATE_BYTES) {
+      ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state[0], length,
+          RATE_BYTES - length);
+      buffer[length / 4] ^= 128 << (8 * (length % 4));
+    }
+
+    xorStateDec(state, length, cipher, cipherIndex, 0, buffer);
+  }
+
+  private void rhoWhiDecLast(int[][] state, int[] data, int dataIndex, int length, byte[] cipher,
+      int cipherIndex,
       int index) {
     int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, data.length);
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
 
     if (length < RATE_BYTES) {
       ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state[index], length,
           RATE_BYTES - length);
-      if (index == 0) {
-        buffer[length / 4] ^= 128 << (8 * (length % 4));
-      }
     }
 
+    xorStateDec(state, length, cipher, cipherIndex, index, buffer);
+  }
+
+  private void xorStateDec(int[][] state, int length, byte[] cipher, int cipherIndex, int index,
+      int[] buffer) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[index][i];
       int tmp2 = state[index][j];
@@ -234,14 +246,15 @@ public final class SchwaemmMasked {
     ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
-  private void rhoWhiDec(int[][] state, int[] message, int[] cipher, int cipherIndex, int index) {
+  private void rhoWhiDec(int[][] state, int[] message, int msgIndex, int[] cipher, int cipherIndex,
+      int index) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[index][i];
       int tmp2 = state[index][j];
-      state[index][i] ^= state[index][j] ^ message[i] ^ state[index][RATE_WORDS + i];
-      state[index][j] = tmp1 ^ message[j] ^ state[index][RATE_WORDS + capIndex(j)];
-      cipher[i + cipherIndex] = message[i] ^ tmp1;
-      cipher[j + cipherIndex] = message[j] ^ tmp2;
+      state[index][i] ^= state[index][j] ^ message[i + msgIndex] ^ state[index][RATE_WORDS + i];
+      state[index][j] = tmp1 ^ message[j + msgIndex] ^ state[index][RATE_WORDS + capIndex(j)];
+      cipher[i + cipherIndex] = message[i + msgIndex] ^ tmp1;
+      cipher[j + cipherIndex] = message[j + msgIndex] ^ tmp2;
     }
   }
 
@@ -253,7 +266,8 @@ public final class SchwaemmMasked {
     if (assoData[0].length > 0) {
       associateData(state, assoData);
     }
-    if (message[0].length > 0) {
+    int messageLength = message[0].length;
+    if (messageLength > 0) {
       encrypt(state, message, cipher);
     }
     int[][] intKey = new int[key.length][];
@@ -262,7 +276,7 @@ public final class SchwaemmMasked {
     }
 
     finalize(state, intKey);
-    generateTag(state, cipher, message[0].length);
+    generateTag(state, cipher, messageLength);
   }
 
   void generateTag(int[][] state, byte[][] cipher, int messageLength) {
@@ -294,18 +308,17 @@ public final class SchwaemmMasked {
       msgAsInt[i] = ConversionUtil.createIntArrayFromBytes(message[i],
           (message[0].length - 1) / 4 + 1);
     }
-    int msgAsIntLength = msgAsInt[0].length;
     int msgLength = message[0].length;
     int index = 0;
     int cipherIndex = 0;
+    int[] cipher = new int[state[0].length / 2];
     boolean slimSparkle = message[0].length > RATE_BYTES;
     for (int i = 0; i < state.length; i++) {
       index = 0;
       cipherIndex = 0;
       msgLength = message[0].length;
       while (msgLength > RATE_BYTES) {
-        int[] cipher = new int[state[0].length / 2];
-        rhoWhiEnc(state, Arrays.copyOfRange(msgAsInt[i], index, msgAsIntLength), cipher,
+        rhoWhiEnc(state, msgAsInt[i], index, cipher,
             cipherIndex, i);
         msgLength -= RATE_BYTES;
         index += RATE_BYTES / 4;
@@ -316,37 +329,32 @@ public final class SchwaemmMasked {
     if (slimSparkle) {
       sparkleSlim.accept(state);
     }
+
     state[0][STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
-    rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt[0], index, msgAsIntLength), msgLength,
-        cipherBytes[0], cipherIndex, 0);
+    rhoWhiEncLast0(state, msgAsInt[0], index, msgLength, cipherBytes[0], cipherIndex);
     for (int i = 1; i < state.length; i++) {
-      rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt[i], index, msgAsIntLength), msgLength,
+      rhoWhiEncLast(state, msgAsInt[i], index, msgLength,
           cipherBytes[i], cipherIndex, i);
     }
     sparkle.accept(state);
   }
 
-  private void rhoWhiEnc(int[][] state, int[] message, int[] cipher, int cipherIndex, int index) {
+  private void rhoWhiEnc(int[][] state, int[] message, int msgIndex, int[] cipher, int cipherIndex,
+      int index) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
+      int iIndex = i + msgIndex;
+      int jIndex = j + msgIndex;
       int tmp1 = state[index][i];
       int tmp2 = state[index][j];
-      state[index][i] = state[index][j] ^ message[i] ^ state[index][RATE_WORDS + i];
-      state[index][j] ^= tmp1 ^ message[j] ^ state[index][RATE_WORDS + capIndex(j)];
-      cipher[i + cipherIndex] = message[i] ^ tmp1;
-      cipher[j + cipherIndex] = message[j] ^ tmp2;
+      state[index][i] = state[index][j] ^ message[iIndex] ^ state[index][RATE_WORDS + i];
+      state[index][j] ^= tmp1 ^ message[jIndex] ^ state[index][RATE_WORDS + capIndex(j)];
+      cipher[i + cipherIndex] = message[iIndex] ^ tmp1;
+      cipher[j + cipherIndex] = message[jIndex] ^ tmp2;
     }
   }
 
-  private void rhoWhiEncLast(int[][] state, int[] data, int length, byte[] cipher, int cipherIndex,
-      int index) {
-    int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, data.length);
-    if (length < RATE_BYTES) {
-      if (index == 0) {
-        buffer[length / 4] |= 128 << (8 * (length % 4));
-      }
-    }
-
+  private void xorStateEnc(int[][] state, int length, byte[] cipher, int cipherIndex, int index,
+      int[] buffer) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[index][i];
       int tmp2 = state[index][j];
@@ -358,6 +366,26 @@ public final class SchwaemmMasked {
     ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
+
+  private void rhoWhiEncLast0(int[][] state, int[] data, int dataIndex, int length, byte[] cipher,
+      int cipherIndex) {
+    int[] buffer = new int[RATE_WORDS];
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
+    if (length < RATE_BYTES) {
+      buffer[length / 4] |= 128 << (8 * (length % 4));
+    }
+    xorStateEnc(state, length, cipher, cipherIndex, 0, buffer);
+  }
+
+  private void rhoWhiEncLast(int[][] state, int[] data, int dataIndex, int length, byte[] cipher,
+      int cipherIndex,
+      int index) {
+    int[] buffer = new int[RATE_WORDS];
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
+
+    xorStateEnc(state, length, cipher, cipherIndex, index, buffer);
+  }
+
   void associateData(int[][] state, byte[][] data) {
     int[][] dataAsInt = new int[data.length][];
     for (int i = 0; i < dataAsInt.length; i++) {
@@ -366,14 +394,12 @@ public final class SchwaemmMasked {
     }
     int dataSize = 0;
     boolean slimSparkle = data[0].length > RATE_BYTES;
-    int dataLength = 0;
     int index = 0;
     for (int i = 0; i < state.length; i++) {
       dataSize = data[0].length;
-      dataLength = dataAsInt[0].length;
       index = 0;
       while (dataSize > RATE_BYTES) {
-        rhoWhiAut(state, Arrays.copyOfRange(dataAsInt[i], index, dataLength), i);
+        rhoWhiAut(state, dataAsInt[i], index, i);
         dataSize -= RATE_BYTES;
         index += RATE_BYTES / 4;
       }
@@ -383,18 +409,18 @@ public final class SchwaemmMasked {
     }
 
     state[0][STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
-    rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt[0], index, dataLength), dataSize, 0);
+    rhoWhiAutLast0(state, dataAsInt[0], index, dataSize);
     for (int i = 1; i < state.length; i++) {
-      rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt[i], index, dataLength), dataSize, i);
+      rhoWhiAutLast(state, dataAsInt[i], index, i);
     }
     sparkle.accept(state);
   }
 
-  private void rhoWhiAut(int[][] state, int[] data, int index) {
+  private void rhoWhiAut(int[][] state, int[] data, int dataIndex, int index) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[index][i];
-      state[index][i] = state[index][j] ^ data[i] ^ state[index][RATE_WORDS + i];
-      state[index][j] ^= tmp ^ data[j] ^ state[index][RATE_WORDS + capIndex(j)];
+      state[index][i] = state[index][j] ^ data[i + dataIndex] ^ state[index][RATE_WORDS + i];
+      state[index][j] ^= tmp ^ data[j + dataIndex] ^ state[index][RATE_WORDS + capIndex(j)];
     }
   }
 
@@ -405,22 +431,19 @@ public final class SchwaemmMasked {
     return i;
   }
 
-  private void rhoWhiAutLast(int[][] state, int[] data, int length, int index) {
+  private void rhoWhiAutLast0(int[][] state, int[] data, int dataIndex, int length) {
     int[] buffer = new int[RATE_WORDS];
-
-    System.arraycopy(data, 0, buffer, 0, data.length);
-
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
     if (length < RATE_BYTES) {
-      if (index == 0) {
-        buffer[length / 4] |= 128 << (8 * (length % 4));
-      }
+      buffer[length / 4] |= 128 << (8 * (length % 4));
     }
+    rhoWhiAut(state, buffer, 0, 0);
+  }
 
-    for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
-      int tmp = state[index][i];
-      state[index][i] = state[index][j] ^ buffer[i] ^ state[index][RATE_WORDS + i];
-      state[index][j] ^= tmp ^ buffer[j] ^ state[index][RATE_WORDS + capIndex(j)];
-    }
+  private void rhoWhiAutLast(int[][] state, int[] data, int dataIndex, int index) {
+    int[] buffer = new int[RATE_WORDS];
+    System.arraycopy(data, dataIndex, buffer, 0, data.length - dataIndex);
+    rhoWhiAut(state, buffer, 0, index);
   }
 
   void initialize(int[][] state, byte[][] key, byte[][] nonce) {

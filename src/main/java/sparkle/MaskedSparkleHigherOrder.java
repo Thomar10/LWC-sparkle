@@ -142,7 +142,6 @@ public final class MaskedSparkleHigherOrder implements MaskedSparkle {
 
     ints[ints.length - 2] ^= ints[ints.length - 1];
     ints[ints.length - 1] = 0;
-
     return ints;
   }
 

@@ -121,7 +121,7 @@ public final class Schwaemm {
     int messageIndex = 0;
     while (cipherLength > RATE_BYTES) {
       int[] messageInt = new int[state.length / 2];
-      rhoWhiDec(state, Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length), messageInt,
+      rhoWhiDec(state, cipherAsInt, index, messageInt,
           messageIndex);
       sparkleSlim.accept(state);
       cipherLength -= RATE_BYTES;
@@ -132,14 +132,15 @@ public final class Schwaemm {
 
     state[STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
 
-    rhoWhiDecLast(state, Arrays.copyOfRange(cipherAsInt, index, cipherAsInt.length), cipherLength,
+    rhoWhiDecLast(state, cipherAsInt, index, cipherLength,
         message, messageIndex);
     sparkle.accept(state);
   }
 
-  private void rhoWhiDecLast(int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
+  private void rhoWhiDecLast(int[] state, int[] data, int index, int length, byte[] cipher,
+      int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, data.length);
+    System.arraycopy(data, index, buffer, 0, data.length - index);
 
     if (length < RATE_BYTES) {
       ConversionUtil.copyLengthBytesFromStateToBuffer(buffer, state, length, RATE_BYTES - length);
@@ -157,14 +158,16 @@ public final class Schwaemm {
     ConversionUtil.populateByteArrayFromInts(buffer, cipher, 0, length, cipherIndex);
   }
 
-  private void rhoWhiDec(int[] state, int[] message, int[] cipher, int cipherIndex) {
+  private void rhoWhiDec(int[] state, int[] message, int index, int[] cipher, int cipherIndex) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
+      int iIndex = i + index;
+      int jIndex = j + index;
       int tmp1 = state[i];
       int tmp2 = state[j];
-      state[i] ^= state[j] ^ message[i] ^ state[RATE_WORDS + i];
-      state[j] = tmp1 ^ message[j] ^ state[RATE_WORDS + capIndex(j)];
-      cipher[i + cipherIndex] = message[i] ^ tmp1;
-      cipher[j + cipherIndex] = message[j] ^ tmp2;
+      state[i] ^= state[j] ^ message[iIndex] ^ state[RATE_WORDS + i];
+      state[j] = tmp1 ^ message[jIndex] ^ state[RATE_WORDS + capIndex(j)];
+      cipher[i + cipherIndex] = message[iIndex] ^ tmp1;
+      cipher[j + cipherIndex] = message[jIndex] ^ tmp2;
     }
   }
 
@@ -216,7 +219,7 @@ public final class Schwaemm {
     int cipherIndex = 0;
     while (msgLength > RATE_BYTES) {
       int[] cipher = new int[state.length / 2];
-      rhoWhiEnc(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), cipher, cipherIndex);
+      rhoWhiEnc(state, msgAsInt, index, cipher, cipherIndex);
       sparkleSlim.accept(state);
       msgLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
@@ -226,25 +229,28 @@ public final class Schwaemm {
 
     state[STATE_WORDS - 1] ^= msgLength < RATE_BYTES ? CONST_M2 : CONST_M3;
 
-    rhoWhiEncLast(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), msgLength,
+    rhoWhiEncLast(state, msgAsInt, index, msgLength,
         cipherBytes, cipherIndex);
     sparkle.accept(state);
   }
 
-  private void rhoWhiEnc(int[] state, int[] message, int[] cipher, int cipherIndex) {
+  private void rhoWhiEnc(int[] state, int[] message, int index, int[] cipher, int cipherIndex) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp1 = state[i];
       int tmp2 = state[j];
-      state[i] = state[j] ^ message[i] ^ state[RATE_WORDS + i];
-      state[j] ^= tmp1 ^ message[j] ^ state[RATE_WORDS + capIndex(j)];
-      cipher[i + cipherIndex] = message[i] ^ tmp1;
-      cipher[j + cipherIndex] = message[j] ^ tmp2;
+      int iIndex = i + index;
+      int jIndex = j + index;
+      state[i] = state[j] ^ message[iIndex] ^ state[RATE_WORDS + i];
+      state[j] ^= tmp1 ^ message[jIndex] ^ state[RATE_WORDS + capIndex(j)];
+      cipher[i + cipherIndex] = message[iIndex] ^ tmp1;
+      cipher[j + cipherIndex] = message[jIndex] ^ tmp2;
     }
   }
 
-  private void rhoWhiEncLast(int[] state, int[] data, int length, byte[] cipher, int cipherIndex) {
+  private void rhoWhiEncLast(int[] state, int[] data, int index, int length, byte[] cipher,
+      int cipherIndex) {
     int[] buffer = new int[RATE_WORDS];
-    System.arraycopy(data, 0, buffer, 0, data.length);
+    System.arraycopy(data, index, buffer, 0, data.length - index);
     if (length < RATE_BYTES) {
       buffer[length / 4] |= 128 << (8 * (length % 4));
     }
@@ -264,14 +270,14 @@ public final class Schwaemm {
    * Absorbs the data into the state.
    *
    * @param state state
-   * @param data data to be absorbed
+   * @param data  data to be absorbed
    */
   void associateData(int[] state, byte[] data) {
     int dataSize = data.length;
     int[] dataAsInt = ConversionUtil.createIntArrayFromBytes(data, (data.length - 1) / 4 + 1);
     int index = 0;
     while (dataSize > RATE_BYTES) {
-      rhoWhiAut(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length));
+      rhoWhiAut(state, dataAsInt, index);
       sparkleSlim.accept(state);
       dataSize -= RATE_BYTES;
       index += RATE_BYTES / 4;
@@ -279,15 +285,15 @@ public final class Schwaemm {
 
     // LAST BLOCK
     state[STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
-    rhoWhiAutLast(state, Arrays.copyOfRange(dataAsInt, index, dataAsInt.length), dataSize);
+    rhoWhiAutLast(state, dataAsInt, index, dataSize);
     sparkle.accept(state);
   }
 
-  private void rhoWhiAut(int[] state, int[] data) {
+  private void rhoWhiAut(int[] state, int[] data, int startPos) {
     for (int i = 0, j = RATE_WORDS / 2; i < RATE_WORDS / 2; i++, j++) {
       int tmp = state[i];
-      state[i] = state[j] ^ data[i] ^ state[RATE_WORDS + i];
-      state[j] ^= tmp ^ data[j] ^ state[RATE_WORDS + capIndex(j)];
+      state[i] = state[j] ^ data[startPos + i] ^ state[RATE_WORDS + i];
+      state[j] ^= tmp ^ data[startPos + j] ^ state[RATE_WORDS + capIndex(j)];
     }
   }
 
@@ -298,10 +304,10 @@ public final class Schwaemm {
     return i;
   }
 
-  private void rhoWhiAutLast(int[] state, int[] data, int length) {
+  private void rhoWhiAutLast(int[] state, int[] data, int index, int length) {
     int[] buffer = new int[RATE_WORDS];
 
-    System.arraycopy(data, 0, buffer, 0, data.length);
+    System.arraycopy(data, index, buffer, 0, data.length - index);
 
     if (length < RATE_BYTES) {
       buffer[length / 4] |= 128 << (8 * (length % 4));

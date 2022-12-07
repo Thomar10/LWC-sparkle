@@ -54,11 +54,38 @@ public final class ConversionUtil {
     return Byte.toUnsignedInt(bytes[offset]);
   }
 
+  public static int bytesToIntSafe(byte[] bytes, int offset, int remaining) {
+    if (remaining >= 4) {
+      return bytesToIntSafe(bytes, offset);
+    }
+    if (remaining == 3) {
+      return (Byte.toUnsignedInt(bytes[2 + offset]) << 16) | (Byte.toUnsignedInt(bytes[1 + offset])
+          << 8) | (Byte.toUnsignedInt(bytes[offset]));
+    }
+    if (remaining == 2) {
+      return Byte.toUnsignedInt(bytes[1 + offset]) << 8 | Byte.toUnsignedInt(bytes[offset]);
+    }
+    if (remaining == 1) {
+      return Byte.toUnsignedInt(bytes[offset]);
+    }
+    return 0;
+  }
+
   public static int[] createIntArrayFromBytes(byte[] bytes, int length) {
     int[] result = new int[length];
     for (int i = 0; i < result.length; i++) {
       result[i] = bytesToIntSafe(bytes, i * 4);
     }
+    return result;
+  }
+
+  public static int[] createIntArrayFromBytesLen(byte[] bytes, int length, int bytesLen) {
+    int[] result = new int[length];
+    for (int i = 0; i < result.length & bytesLen > 4; i++) {
+      result[i] = bytesToIntSafe(bytes, i * 4);
+      bytesLen -= 4;
+    }
+    result[result.length - 1] = bytesToIntSafe(bytes, (result.length - 1) * 4, bytesLen);
     return result;
   }
 
