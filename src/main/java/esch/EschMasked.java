@@ -1,14 +1,15 @@
 package esch;
 
-import java.util.function.Consumer;
-import sparkle.Sparkle;
+import sparkle.MaskedSparkle;
 import util.ConversionUtil;
 
-public final class Esch {
+import java.util.function.Consumer;
+
+public final class EschMasked {
 
 
-    private final Consumer<int[]> sparkleSlim;
-    private final Consumer<int[]> sparkle;
+    private final Consumer<int[][]> sparkleSlim;
+    private final Consumer<int[][]> sparkle;
 
     //Settings (This case is esch256)
     private final int ESCH_DIGEST_LEN;
@@ -35,7 +36,7 @@ public final class Esch {
     private final int CONST_M1;
     private final int CONST_M2;
 
-    public Esch(int type){
+    public EschMasked(int type, MaskedSparkle maskedSparkle){
     switch (type) {
             case 256 -> {
                 ESCH_DIGEST_LEN = 256;
@@ -44,8 +45,8 @@ public final class Esch {
                 SPARKLE_CAPACITY = 256;
                 SPARKLE_STEPS_SLIM = 7;
                 SPARKLE_STEPS_BIG = 11;
-                this.sparkleSlim = Sparkle::sparkle384Slim;
-                this.sparkle = Sparkle::sparkle384;
+                this.sparkleSlim = maskedSparkle::sparkle384Slim;
+                this.sparkle = maskedSparkle::sparkle384;
             }
             case 384 -> {
                 ESCH_DIGEST_LEN = 384;
@@ -54,8 +55,8 @@ public final class Esch {
                 SPARKLE_CAPACITY = 384;
                 SPARKLE_STEPS_SLIM = 8;
                 SPARKLE_STEPS_BIG = 12;
-                this.sparkleSlim = Sparkle::sparkle512Slim;
-                this.sparkle = Sparkle::sparkle512;
+                this.sparkleSlim = maskedSparkle::sparkle512Slim;
+                this.sparkle = maskedSparkle::sparkle512;
             }
             default -> throw new RuntimeException("Unknown esch.Esch configuration!");
         }
@@ -136,57 +137,61 @@ public final class Esch {
         }
     }
 
-    void processMessage(int[]state, byte[] in)
+    void processMessage(int[][] state, byte[][] in)
     {
         int length = in.length;
         int index = 0;
 
-        int[] msgAsInt;
+        int[][] msgAsInt = new int[state.length][];
 
         //Handle empty array
         if(length > 0) {
-            msgAsInt = ConversionUtil.createIntArrayFromBytes(in, (in.length - 1) / 4 + 1);
+            for (int i = 0; i < in.length; i++) {
+                msgAsInt[i] = ConversionUtil.createIntArrayFromBytes(in[i], (in[i].length - 1) / 4 + 1);
+            }
         }
-        else {
-            msgAsInt = new int[0];
+        for (int i = 0; i < state.length; i++) {
+            while (length > RATE_BYTES) {
+                add_msg_blk(state[i], msgAsInt[i], index);
+                sparkleSlim.accept(state);
+                length -= RATE_BYTES;
+                index += RATE_WORDS;
+            }
         }
 
-
-        while (length > RATE_BYTES) {
-            add_msg_blk(state, msgAsInt, index);
-            sparkleSlim.accept(state);
-            length -= RATE_BYTES;
-            index += RATE_WORDS;
+        state[0][STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
+        for (int i = 0; i < state.length; i++) {
+            add_msg_blk_last(state[i], msgAsInt[i], length, index);
         }
-
-
-
-        state[STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
-        add_msg_blk_last(state, msgAsInt, length, index);
         sparkle.accept(state);
     }
 
-    void finalize(int[] state, byte[] out)
+    void finalize(int[][] state, byte[][] out)
     {
         int outlen;
         int outIndex = 0;
 
 
-
-        ConversionUtil.populateByteArrayFromInts(state, out,0,  RATE_BYTES, outIndex);
+        for (int i = 0; i < state.length; i++) {
+            ConversionUtil.populateByteArrayFromInts(state[i], out[i],0,  RATE_BYTES, outIndex);
+        }
         outlen = RATE_BYTES;
         outIndex += RATE_BYTES;
         while (outlen < DIGEST_BYTES) {
             sparkleSlim.accept(state);
-            ConversionUtil.populateByteArrayFromInts(state, out,0, RATE_BYTES, outIndex);
+            for (int i = 0; i < state.length; i++) {
+                ConversionUtil.populateByteArrayFromInts(state[i], out[i], 0, RATE_BYTES, outIndex);
+            }
             outlen += RATE_BYTES;
             outIndex += RATE_BYTES;
         }
     }
 
-    int crypto_hash(byte[] out, byte[] in)
+    int crypto_hash(byte[][] out, byte[][] in)
     {
-        int[] state = new int[STATE_WORDS];
+        int[][] state = new int[out.length][STATE_WORDS];
+
+
 
         processMessage(state, in);
         finalize(state, out);
