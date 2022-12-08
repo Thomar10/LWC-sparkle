@@ -154,7 +154,7 @@ public final class Esch {
 
 
         while (length > RATE_BYTES) {
-            add_msg_blk(state, msgAsInt, index); //Arrays.copyOfRange(msgAsInt, index, msgAsInt.length)
+            add_msg_blk(state, msgAsInt, index);
             sparkleSlim.accept(state);
             length -= RATE_BYTES;
             index += RATE_WORDS;
