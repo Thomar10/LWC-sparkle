@@ -89,19 +89,19 @@ public final class Esch {
     }
 
 
-    void add_msg_blk(int[] state, int[] in)
+    void add_msg_blk(int[] state, int[] in, int inIndex)
     {
         int tmpx = 0, tmpy = 0;
 
         for(int i = 0; i < RATE_WORDS; i += 2) {
-            tmpx ^= in[i];
-            tmpy ^= in[i+1];
+            tmpx ^= in[inIndex+i];
+            tmpy ^= in[inIndex+i+1];
         }
         tmpx = ell(tmpx);
         tmpy = ell(tmpy);
         for(int i = 0; i < RATE_WORDS; i += 2) {
-            state[i] ^= (in[i] ^ tmpy);
-            state[i+1] ^= (in[i+1] ^ tmpx);
+            state[i] ^= (in[inIndex+i] ^ tmpy);
+            state[i+1] ^= (in[inIndex+i+1] ^ tmpx);
         }
         for(int i = RATE_WORDS; i < (STATE_WORDS/2); i += 2) {
             state[i] ^= tmpy;
@@ -109,13 +109,13 @@ public final class Esch {
         }
     }
 
-    void add_msg_blk_last(int[] state, int[] in, int inlen)
+    void add_msg_blk_last(int[] state, int[] in, int inlen, int inIndex)
     {
         int tmpx = 0, tmpy = 0;
         int i;
 
         int[] buffer = new int[RATE_WORDS];
-        System.arraycopy(in, 0, buffer, 0, in.length);
+        System.arraycopy(in, inIndex, buffer, 0, in.length - inIndex);
 
         if (inlen < RATE_BYTES) {
             buffer[inlen / 4] |= 128 << (8 * (inlen % 4));
@@ -137,15 +137,6 @@ public final class Esch {
         }
     }
 
-
-    void Initialize(int[] state)
-    {
-        int i;
-
-        for (i = 0; i < STATE_WORDS; i++)
-            state[i] = 0;
-    }
-
     void ProcessMessage(int[]state, byte[] in)
     {
         int length = in.length;
@@ -163,7 +154,7 @@ public final class Esch {
 
 
         while (length > RATE_BYTES) {
-            add_msg_blk(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length));
+            add_msg_blk(state, msgAsInt, index); //Arrays.copyOfRange(msgAsInt, index, msgAsInt.length)
             sparkleSlim.accept(state);
             length -= RATE_BYTES;
             index += RATE_WORDS;
@@ -172,7 +163,7 @@ public final class Esch {
 
 
         state[STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
-        add_msg_blk_last(state, Arrays.copyOfRange(msgAsInt, index, msgAsInt.length), length);
+        add_msg_blk_last(state, msgAsInt, length, index);
         sparkle.accept(state);
     }
 
@@ -198,7 +189,6 @@ public final class Esch {
     {
         int[] state = new int[STATE_WORDS];
 
-        Initialize(state);
         ProcessMessage(state, in);
         Finalize(state, out);
 
