@@ -109,7 +109,7 @@ public final class EschMasked {
         }
     }
 
-    void add_msg_blk_last(int[] state, int[] in, int inlen, int inIndex)
+    void add_msg_blk_last(int[] state, int[] in, int inlen, int inIndex, boolean useConstants)
     {
         int tmpx = 0, tmpy = 0;
         int i;
@@ -117,8 +117,10 @@ public final class EschMasked {
         int[] buffer = new int[RATE_WORDS];
         System.arraycopy(in, inIndex, buffer, 0, in.length - inIndex);
 
-        if (inlen < RATE_BYTES) {
-            buffer[inlen / 4] |= 128 << (8 * (inlen % 4));
+        if(useConstants){
+            if (inlen < RATE_BYTES) {
+                buffer[inlen / 4] |= 128 << (8 * (inlen % 4));
+            }
         }
 
         for(i = 0; i < RATE_WORDS; i += 2) {
@@ -139,7 +141,7 @@ public final class EschMasked {
 
     void processMessage(int[][] state, byte[][] in)
     {
-        int length = in.length;
+        int length = in[0].length;
         int index = 0;
 
         int[][] msgAsInt = new int[state.length][];
@@ -150,18 +152,25 @@ public final class EschMasked {
                 msgAsInt[i] = ConversionUtil.createIntArrayFromBytes(in[i], (in[i].length - 1) / 4 + 1);
             }
         }
-        for (int i = 0; i < state.length; i++) {
-            while (length > RATE_BYTES) {
-                add_msg_blk(state[i], msgAsInt[i], index);
-                sparkleSlim.accept(state);
-                length -= RATE_BYTES;
-                index += RATE_WORDS;
+        else{
+            for (int i = 0; i < in.length; i++) {
+                msgAsInt[i] = new int[0];
             }
         }
 
+        while (length > RATE_BYTES) {
+            for (int i = 0; i < state.length; i++) {
+                add_msg_blk(state[i], msgAsInt[i], index);
+            }
+            sparkleSlim.accept(state);
+            length -= RATE_BYTES;
+            index += RATE_WORDS;
+        }
+
         state[0][STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
-        for (int i = 0; i < state.length; i++) {
-            add_msg_blk_last(state[i], msgAsInt[i], length, index);
+        add_msg_blk_last(state[0], msgAsInt[0], length, index, true);
+        for (int i = 1; i < state.length; i++) {
+            add_msg_blk_last(state[i], msgAsInt[i], length, index, false);
         }
         sparkle.accept(state);
     }

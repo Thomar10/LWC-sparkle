@@ -151,15 +151,12 @@ public final class Esch {
             msgAsInt = new int[0];
         }
 
-
         while (length > RATE_BYTES) {
             add_msg_blk(state, msgAsInt, index);
             sparkleSlim.accept(state);
             length -= RATE_BYTES;
             index += RATE_WORDS;
         }
-
-
 
         state[STATE_BRANS-1] ^= ((length < RATE_BYTES) ? CONST_M1 : CONST_M2);
         add_msg_blk_last(state, msgAsInt, length, index);

@@ -3,8 +3,6 @@ package esch;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import schwaemm.SchwaemmHelper;
-import schwaemm.SchwaemmType;
 import sparkle.MaskedSparkleFirstOrder;
 
 import java.io.File;
@@ -12,12 +10,12 @@ import java.io.FileNotFoundException;
 import java.util.HexFormat;
 import java.util.Random;
 
-public class EschMaskedTest256 {
+public class EschMaskedTest384 {
 
-    private final int ESCH_DIGEST_LEN = 256;
+    private final int ESCH_DIGEST_LEN = 384;
     private final int DIGEST_BYTES = (ESCH_DIGEST_LEN/8);
-    private final EschMasked EschMasked = new EschMasked(256, new MaskedSparkleFirstOrder());
-    private final Esch Esch = new Esch(256);
+    private final EschMasked EschMasked = new EschMasked(384, new MaskedSparkleFirstOrder());
+    private final Esch Esch = new Esch(384);
 
     private final Random random = new Random();
 
@@ -32,7 +30,7 @@ public class EschMaskedTest256 {
 
     @RepeatedTest(50)
     void testHelperTestGeneration() {
-        EschHelper data = EschHelper.prepareTest(256, 64, random);
+        EschHelper data = EschHelper.prepareTest(384, 64, random);
 
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
         EschHelper unmaskedData = EschHelper.recoverData(maskedData);
@@ -42,7 +40,7 @@ public class EschMaskedTest256 {
 
     @RepeatedTest(50)
     void finalizeCall() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.finalize(data.state(), data.out());
@@ -55,7 +53,7 @@ public class EschMaskedTest256 {
 
     @RepeatedTest(50)
     void processCall() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.processMessage(data.state(), data.in());
@@ -68,7 +66,7 @@ public class EschMaskedTest256 {
 
     @RepeatedTest(50)
     void cryptoHashTest() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.crypto_hash(data.out(), data.in());
@@ -87,7 +85,7 @@ public class EschMaskedTest256 {
         byte[][] inMasked = {};
 
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("esch/LWC_HASH_KAT_256.txt").getFile());
+        File file = new File(classLoader.getResource("esch/LWC_HASH_KAT_384.txt").getFile());
 
         EschKatTestHelper testHelper = new EschKatTestHelper(file);
 

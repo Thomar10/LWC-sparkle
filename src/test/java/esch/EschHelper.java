@@ -25,10 +25,10 @@ public record EschHelper(byte[] in, byte[] out, int[] state) {
             default -> throw new RuntimeException("Unknown esch.Esch configuration!");
         }
 
-        int stateLength = (SPARKLE_STATE / 32);;
+        int stateLength = (SPARKLE_STATE/32);;
         int outLength = (ESCH_DIGEST_LEN/8);
 
-        int randomMsg = random.nextInt(32 - minLength) + minLength;
+        int randomMsg = random.nextInt(2056 - minLength) + minLength;
         byte[] in = new byte[randomMsg];
         random.nextBytes(in);
 
