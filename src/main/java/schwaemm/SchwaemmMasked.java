@@ -175,22 +175,19 @@ public final class SchwaemmMasked {
     int messageIndex = 0;
     int cipherLength = message[0].length;
     boolean slimSparkle = message[0].length > RATE_BYTES;
-    for (int i = 0; i < state.length; i++) {
-      index = 0;
-      messageIndex = 0;
-      cipherLength = message[0].length;
+
+
       while (cipherLength > RATE_BYTES) {
+        for (int i = 0; i < state.length; i++) {
         int[] messageInt = new int[state[0].length / 2];
         rhoWhiDec(state, cipherAsInt[i], index, messageInt,
             messageIndex, i);
+        ConversionUtil.populateByteArrayFromInts(messageInt, message[i], 0, TAG_BYTES, 0);
+        }
         cipherLength -= RATE_BYTES;
         index += RATE_BYTES / 4;
         messageIndex += RATE_BYTES;
-        ConversionUtil.populateByteArrayFromInts(messageInt, message[i], 0, TAG_BYTES, 0);
-      }
-    }
-    if (slimSparkle) {
-      sparkleSlim.accept(state);
+        sparkleSlim.accept(state);
     }
 
     state[0][STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
@@ -312,21 +309,17 @@ public final class SchwaemmMasked {
     int index = 0;
     int cipherIndex = 0;
     int[] cipher = new int[state[0].length / 2];
-    boolean slimSparkle = message[0].length > RATE_BYTES;
-    for (int i = 0; i < state.length; i++) {
-      index = 0;
-      cipherIndex = 0;
-      msgLength = message[0].length;
-      while (msgLength > RATE_BYTES) {
+
+    while (msgLength > RATE_BYTES) {
+      for (int i = 0; i < state.length; i++) {
         rhoWhiEnc(state, msgAsInt[i], index, cipher,
-            cipherIndex, i);
-        msgLength -= RATE_BYTES;
-        index += RATE_BYTES / 4;
-        cipherIndex += RATE_BYTES;
+                cipherIndex, i);
+
         ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes[i], 0, TAG_BYTES, 0);
       }
-    }
-    if (slimSparkle) {
+      msgLength -= RATE_BYTES;
+      index += RATE_BYTES / 4;
+      cipherIndex += RATE_BYTES;
       sparkleSlim.accept(state);
     }
 
