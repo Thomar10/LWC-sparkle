@@ -22,7 +22,7 @@ public final class SchwaemmMasked128128TestBigM {
   void initializeTest() {
     int[] stateJ = new int[STATE_WORDS];
     int[] stateToMask = new int[STATE_WORDS];
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     schwaemm.initialize(stateJ, data.key(), data.nonce());
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataToMasked(data, 2);
     int[][] maskedState = SchwaemmHelper.maskIntArray(stateToMask, 2);
@@ -32,7 +32,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void finalizeCall() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
 
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
     schwaemmMasked.finalize(maskedData.state(), maskedData.key());
@@ -44,7 +44,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void checkSchwaemmEncrypt() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     schwaemm.encryptAndTag(data.message(), data.cipherJava(),
         data.associate(),
         data.key(),
@@ -60,7 +60,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void processCipherText() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
     byte[] randomCipher = new byte[data.message().length + TAG_BYTES];
     new Random().nextBytes(randomCipher);
@@ -76,7 +76,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void generateTag() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
 
     byte[] tag = new byte[data.message().length + TAG_BYTES];
@@ -90,7 +90,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void encryptAndDecryptMaskedAndUnmasked() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
 
     schwaemm.encryptAndTag(data.message(), data.cipherJava(),
@@ -114,7 +114,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void encryptAndDecrypt() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
     schwaemmMasked.encryptAndTag(maskedData.message(), maskedData.cipher(), maskedData.associate(),
         maskedData.key(), maskedData.nonce());
@@ -128,7 +128,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void processAssociateData() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
 
     schwaemmMasked.associateData(maskedData.state(), maskedData.associate());
@@ -141,7 +141,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void processPlaintext() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
 
     schwaemm.encrypt(data.stateJ(), data.message(), data.cipherJava());
     SchwaemmHelper.MaskedData maskedData = SchwaemmHelper.convertDataFirstOrder(data);
@@ -154,7 +154,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void schwaemmHelperMaskAndRecover() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 2);
     Assertions.assertThat(data.stateC()).isEqualTo(SchwaemmHelper.recoverState(maskedState));
 
@@ -168,7 +168,7 @@ public final class SchwaemmMasked128128TestBigM {
 
   @RepeatedTest(50)
   void schwaemmHelperMaskAndRecoverHigherOrder() {
-    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 64);
+    SchwaemmHelper data = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 33, 1024);
     int[][] maskedState = SchwaemmHelper.maskIntArray(data.stateJ(), 4);
     Assertions.assertThat(data.stateC()).isEqualTo(SchwaemmHelper.recoverState(maskedState));
 

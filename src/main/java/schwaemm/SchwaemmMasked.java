@@ -384,21 +384,19 @@ public final class SchwaemmMasked {
       dataAsInt[i] = ConversionUtil.createIntArrayFromBytes(data[i],
           (data[0].length - 1) / 4 + 1);
     }
-    int dataSize = 0;
-    boolean slimSparkle = data[0].length > RATE_BYTES;
+    int dataSize = data[0].length;;
+
     int index = 0;
-    for (int i = 0; i < state.length; i++) {
-      dataSize = data[0].length;
-      index = 0;
-      while (dataSize > RATE_BYTES) {
+
+    while (dataSize > RATE_BYTES) {
+      for (int i = 0; i < state.length; i++) {
         rhoWhiAut(state, dataAsInt[i], index, i);
-        dataSize -= RATE_BYTES;
-        index += RATE_BYTES / 4;
       }
-    }
-    if (slimSparkle) {
+      dataSize -= RATE_BYTES;
+      index += RATE_BYTES / 4;
       sparkleSlim.accept(state);
     }
+
 
     state[0][STATE_WORDS - 1] ^= dataSize < RATE_BYTES ? CONST_A0 : CONST_A1;
     rhoWhiAutLast0(state, dataAsInt[0], index, dataSize);
