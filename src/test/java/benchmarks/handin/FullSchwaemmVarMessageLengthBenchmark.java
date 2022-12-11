@@ -1,5 +1,6 @@
-package benchmarks;
+package benchmarks.handin;
 
+import benchmarks.handin.CompleteSparkleBenchmark;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import schwaemm.Schwaemm;
@@ -11,7 +12,6 @@ import sparkle.MaskedSparkleFirstOrder;
 import sparkle.MaskedSparkleHigherOrder;
 import sparkle.MaskedSparkleKoggeStone;
 
-import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 

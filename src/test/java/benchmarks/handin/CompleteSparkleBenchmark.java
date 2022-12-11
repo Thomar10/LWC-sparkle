@@ -1,4 +1,4 @@
-package benchmarks;
+package benchmarks.handin;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;

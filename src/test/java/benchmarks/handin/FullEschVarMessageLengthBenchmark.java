@@ -1,5 +1,6 @@
-package benchmarks;
+package benchmarks.handin;
 
+import benchmarks.handin.CompleteSparkleBenchmark;
 import esch.Esch;
 import esch.EschHelper;
 import esch.EschMasked;
