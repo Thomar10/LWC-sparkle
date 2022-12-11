@@ -196,7 +196,7 @@ public final class EschMasked {
         }
     }
 
-    int crypto_hash(byte[][] out, byte[][] in)
+    public int crypto_hash(byte[][] out, byte[][] in)
     {
         int[][] state = new int[out.length][STATE_WORDS];
 
