@@ -1,6 +1,5 @@
 package benchmarks.handin;
 
-import benchmarks.handin.CompleteSparkleBenchmark;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import schwaemm.Schwaemm;
@@ -12,7 +11,7 @@ import sparkle.*;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-public class FullSchwaemmVarMessageLengthBenchmark {
+public class SchwaemmVariants512LengthBenchmark {
 
 
   @Fork(value = 1, warmups = 1)
@@ -124,18 +123,13 @@ public class FullSchwaemmVarMessageLengthBenchmark {
   public static class ExecutionPlan {
 
 
-    private final Schwaemm schwaemmNormal = new Schwaemm(SchwaemmType.S128128);
+    private Schwaemm schwaemmNormal;
 
-    private final SchwaemmMasked goubinSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
-            new MaskedSparkleGoubin());
-    private final SchwaemmMasked booleanSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
-        new MaskedSparkleBoolean());
-    private final SchwaemmMasked firstOrderSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
-        new MaskedSparkleFirstOrder());
-    private final SchwaemmMasked koggeStoneSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
-        new MaskedSparkleKoggeStone());
-    private final SchwaemmMasked higherOrderSchwaemm = new SchwaemmMasked(SchwaemmType.S128128,
-        new MaskedSparkleHigherOrder());
+    private SchwaemmMasked goubinSchwaemm;
+    private SchwaemmMasked booleanSchwaemm;
+    private SchwaemmMasked firstOrderSchwaemm;
+    private SchwaemmMasked koggeStoneSchwaemm;
+    private SchwaemmMasked higherOrderSchwaemm;
 
     int count;
 
@@ -156,8 +150,11 @@ public class FullSchwaemmVarMessageLengthBenchmark {
 
     public static final int COUNT = 200;
 
-    @Param({"32", "64", "128", "256", "512", "1024", "2048"})
+    @Param({"512"})
     private int MessageLength;
+
+    @Param({"256128"}) //@Param({"128128", "256128" , "192192", "256256"})
+    private int variant;
 
     private static Random random = new Random(1234);
 
@@ -168,9 +165,36 @@ public class FullSchwaemmVarMessageLengthBenchmark {
     /** Setup method for benchmarks. */
     @Setup(Level.Trial)
     public void setUp() {
+      SchwaemmType type;
+
+      switch (variant){
+        case 128128 -> {
+          type = SchwaemmType.S128128;
+        }
+        case 256128 -> {
+          type = SchwaemmType.S256128;
+        }
+        case 192192 -> {
+          type = SchwaemmType.S192192;
+        }
+        case 256256 -> {
+          type = SchwaemmType.S256256;
+        }
+        default-> {throw new RuntimeException("Unknown Schwaemm configuration!");}
+      }
+
+
+      schwaemmNormal = new Schwaemm(type);
+      goubinSchwaemm = new SchwaemmMasked(type, new MaskedSparkleGoubin());
+      booleanSchwaemm = new SchwaemmMasked(type, new MaskedSparkleBoolean());
+      firstOrderSchwaemm = new SchwaemmMasked(type, new MaskedSparkleFirstOrder());
+      koggeStoneSchwaemm = new SchwaemmMasked(type, new MaskedSparkleKoggeStone());
+      higherOrderSchwaemm = new SchwaemmMasked(type, new MaskedSparkleHigherOrder());
+
+
       for (int i = 0; i < COUNT; i++) {
 
-        SchwaemmHelper test = SchwaemmHelper.prepareTest(SchwaemmType.S128128, MessageLength-1, MessageLength, random);
+        SchwaemmHelper test = SchwaemmHelper.prepareTest(type, MessageLength-1, MessageLength, random);
 
         data[i] = test;
         dataMasked[i] = SchwaemmHelper.convertDataToMasked(test, 2);

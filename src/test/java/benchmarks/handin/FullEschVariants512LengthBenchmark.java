@@ -1,6 +1,5 @@
 package benchmarks.handin;
 
-import benchmarks.handin.CompleteSparkleBenchmark;
 import esch.Esch;
 import esch.EschHelper;
 import esch.EschMasked;
@@ -11,7 +10,7 @@ import sparkle.*;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-public class FullEschVarMessageLengthBenchmark {
+public class FullEschVariants512LengthBenchmark {
   
 
   @Fork(value = 1, warmups = 1)
@@ -107,13 +106,13 @@ public class FullEschVarMessageLengthBenchmark {
   @State(Scope.Benchmark)
   public static class ExecutionPlan {
 
-    private final Esch eschNormal = new Esch(256);
-    private final EschMasked booleanEsch = new EschMasked(256, new MaskedSparkleBoolean());
+    private Esch eschNormal;
+    private EschMasked booleanEsch;
 
-    private final EschMasked goubinEsch = new EschMasked(256, new MaskedSparkleGoubin());
-    private final EschMasked firstOrderEsch = new EschMasked(256, new MaskedSparkleFirstOrder());
-    private final EschMasked koggeStoneEsch = new EschMasked(256, new MaskedSparkleKoggeStone());
-    private final EschMasked higherOrderEsch = new EschMasked(256, new MaskedSparkleHigherOrder());
+    private EschMasked goubinEsch;
+    private EschMasked firstOrderEsch;
+    private EschMasked koggeStoneEsch;
+    private EschMasked higherOrderEsch;
 
     int count;
 
@@ -134,8 +133,11 @@ public class FullEschVarMessageLengthBenchmark {
 
     public static final int COUNT = 200;
 
-    @Param({"32", "64", "128", "256", "512", "1024", "2048"})
+    @Param({"512"})
     private int MessageLength;
+
+    @Param({"256", "384"})
+    private int variant;
 
     private static Random random = new Random(1234);
 
@@ -146,9 +148,17 @@ public class FullEschVarMessageLengthBenchmark {
     /** Setup method for benchmarks. */
     @Setup(Level.Trial)
     public void setUp() {
+      eschNormal = new Esch(variant);
+      booleanEsch = new EschMasked(variant, new MaskedSparkleBoolean());
+
+      goubinEsch = new EschMasked(variant, new MaskedSparkleGoubin());
+      firstOrderEsch = new EschMasked(variant, new MaskedSparkleFirstOrder());
+      koggeStoneEsch = new EschMasked(variant, new MaskedSparkleKoggeStone());
+      higherOrderEsch = new EschMasked(variant, new MaskedSparkleHigherOrder());
+
       for (int i = 0; i < COUNT; i++) {
 
-        EschHelper test = EschHelper.prepareTest(256, MessageLength-1, MessageLength, random);
+        EschHelper test = EschHelper.prepareTest(variant, MessageLength-1, MessageLength, random);
 
         data[i] = test;
         dataMasked[i] = EschHelper.convertDataToMasked(test, 2);
