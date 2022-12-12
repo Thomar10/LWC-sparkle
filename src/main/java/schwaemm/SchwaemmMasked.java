@@ -178,10 +178,11 @@ public final class SchwaemmMasked {
 
       while (cipherLength > RATE_BYTES) {
         for (int i = 0; i < state.length; i++) {
-        int[] messageInt = new int[state[0].length / 2];
-        rhoWhiDec(state, cipherAsInt[i], index, messageInt,
-            0, i);
-        ConversionUtil.populateByteArrayFromInts(messageInt, message[i], 0, TAG_BYTES, messageIndex);
+        int[] messageInt = new int[type.getCipherLength()];
+          rhoWhiDec(state, cipherAsInt[i], index, messageInt,
+              0, i);
+          ConversionUtil.populateByteArrayFromInts(messageInt, message[i], 0, messageInt.length * 8,
+              messageIndex);
         }
         cipherLength -= RATE_BYTES;
         index += RATE_BYTES / 4;
@@ -307,14 +308,15 @@ public final class SchwaemmMasked {
     int msgLength = message[0].length;
     int index = 0;
     int cipherIndex = 0;
-    int[] cipher = new int[state[0].length / 2];
+    int[] cipher = new int[type.getCipherLength()];
 
     while (msgLength > RATE_BYTES) {
       for (int i = 0; i < state.length; i++) {
         rhoWhiEnc(state, msgAsInt[i], index, cipher,
                 0, i);
 
-        ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes[i], 0, TAG_BYTES, cipherIndex);
+        ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes[i], 0, cipher.length * 8,
+            cipherIndex);
       }
       msgLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
