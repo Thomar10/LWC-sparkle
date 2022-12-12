@@ -37,7 +37,7 @@ public class CompleteSparkleBenchmark {
 
   @Fork(value = 1, warmups = 1)
   @Warmup(iterations = 3, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
-  @Measurement(iterations = 5, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
+  @Measurement(iterations = 10, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
   @Benchmark
   public void maskedBooleanSparkleFirstOder(ExecutionPlan plan, Blackhole blackhole) {
     int[][] state = plan.selectStateFirstOrder();
