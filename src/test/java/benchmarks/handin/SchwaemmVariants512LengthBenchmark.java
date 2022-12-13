@@ -110,7 +110,7 @@ public class SchwaemmVariants512LengthBenchmark {
   @Benchmark
   public void schwaemmEncryptBoolean3(ExecutionPlan plan, Blackhole blackhole) {
     SchwaemmHelper.MaskedData data = plan.selectStateHigherOrder3();
-    plan.higherOrderSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
+    plan.booleanSchwaemm.encryptAndTag(data.message(), data.cipher(), data.associate(),
         data.key(),
         data.nonce());
     blackhole.consume(data);

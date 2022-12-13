@@ -96,7 +96,7 @@ public class FullEschVariants512LengthBenchmark {
   @Benchmark
   public void eschBoolean3(ExecutionPlan plan, Blackhole blackhole) {
     EschHelper.MaskedData data = plan.selectStateHigherOrder3();
-    plan.higherOrderEsch.crypto_hash(data.out(), data.in());
+    plan.booleanEsch.crypto_hash(data.out(), data.in());
     blackhole.consume(data);
   }
 
