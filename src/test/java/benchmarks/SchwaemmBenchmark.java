@@ -54,7 +54,7 @@ public class SchwaemmBenchmark {
     public void setUp() {
       Random random = new Random(1234);
       for (int i = 0; i < COUNT; i++) {
-        data[i] = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 0, random, 32);
+        data[i] = SchwaemmHelper.prepareTest(SchwaemmType.S128128, 0, 32, random);
       }
     }
   }

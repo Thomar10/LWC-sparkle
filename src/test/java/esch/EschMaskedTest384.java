@@ -30,7 +30,7 @@ public class EschMaskedTest384 {
 
     @RepeatedTest(50)
     void testHelperTestGeneration() {
-        EschHelper data = EschHelper.prepareTest(384, 64, random);
+        EschHelper data = EschHelper.prepareTest(384, 64, 2048, random);
 
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
         EschHelper unmaskedData = EschHelper.recoverData(maskedData);
@@ -40,7 +40,7 @@ public class EschMaskedTest384 {
 
     @RepeatedTest(50)
     void finalizeCall() {
-        EschHelper data = EschHelper.prepareTest(384, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.finalize(data.state(), data.out());
@@ -53,7 +53,7 @@ public class EschMaskedTest384 {
 
     @RepeatedTest(50)
     void processCall() {
-        EschHelper data = EschHelper.prepareTest(384, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.processMessage(data.state(), data.in());
@@ -66,7 +66,7 @@ public class EschMaskedTest384 {
 
     @RepeatedTest(50)
     void cryptoHashTest() {
-        EschHelper data = EschHelper.prepareTest(384, 5, random);
+        EschHelper data = EschHelper.prepareTest(384, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMaskedFirstOrder(data);
 
         Esch.crypto_hash(data.out(), data.in());

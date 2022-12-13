@@ -23,7 +23,7 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
 
   private static final Random random = new Random();
 
-  public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength, Random random, int maxLength) {
+  public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength, int maxLength, Random random) {
     // Tests in C only goes up to 32 bits.
     int randomInt = random.nextInt(maxLength - minLength) + minLength;
     int randomMsg = random.nextInt(maxLength - minLength) + minLength;
@@ -48,18 +48,18 @@ public record SchwaemmHelper(byte[] key, byte[] nonce, byte[] associate, byte[] 
   }
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int length) {
-    return prepareTest(type, length, random, 32);
+    return prepareTest(type, length, 32, random);
   }
 
   public static SchwaemmHelper prepareTest(SchwaemmType type, int minLength, int maxLength) {
-    return prepareTest(type, minLength, random, maxLength);
+    return prepareTest(type, minLength, maxLength, random);
   }
   public static SchwaemmHelper prepareTest(SchwaemmType type) {
-    return prepareTest(type, 0, random, 32);
+    return prepareTest(type, 0, 32, random);
   }
 
   public static MaskedData prepareBenchmarkMasked(SchwaemmType type, Random random, int order) {
-    return convertDataToMasked(prepareTest(type, 0, random, 32), order, random);
+    return convertDataToMasked(prepareTest(type, 0, 32, random), order, random);
   }
 
   public static MaskedData convertDataToMasked(SchwaemmHelper data, int order) {

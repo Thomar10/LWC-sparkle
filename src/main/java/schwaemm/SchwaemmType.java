@@ -33,6 +33,14 @@ public enum SchwaemmType {
     }
   }
 
+  public int getCipherLength() {
+    if ("256128".equals(this.type)) {
+      return this.getStateSize() / 2 + 2;
+    } else {
+      return this.getStateSize() / 2;
+    }
+  }
+
   public int getVerifyTagLength() {
     if ("256128".equals(this.type)) {
       return 4;

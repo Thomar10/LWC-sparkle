@@ -3,7 +3,6 @@ package esch;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import sparkle.MaskedSparkleFirstOrder;
 import sparkle.MaskedSparkleHigherOrder;
 
 import java.io.File;
@@ -31,7 +30,7 @@ public class EschMaskedHigherOrderTest256 {
 
     @RepeatedTest(50)
     void finalizeCall() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(256, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMasked(data, 3);
 
         Esch.finalize(data.state(), data.out());
@@ -44,7 +43,7 @@ public class EschMaskedHigherOrderTest256 {
 
     @RepeatedTest(50)
     void processCall() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(256, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMasked(data, 3);
 
         Esch.processMessage(data.state(), data.in());
@@ -57,7 +56,7 @@ public class EschMaskedHigherOrderTest256 {
 
     @RepeatedTest(50)
     void cryptoHashTest() {
-        EschHelper data = EschHelper.prepareTest(256, 5, random);
+        EschHelper data = EschHelper.prepareTest(256, 5, 2048, random);
         EschHelper.MaskedData maskedData = EschHelper.convertDataToMasked(data, 3);
 
         Esch.crypto_hash(data.out(), data.in());

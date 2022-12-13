@@ -181,7 +181,7 @@ public final class Esch {
         }
     }
 
-    int crypto_hash(byte[] out, byte[] in)
+   public  int crypto_hash(byte[] out, byte[] in)
     {
         int[] state = new int[STATE_WORDS];
 

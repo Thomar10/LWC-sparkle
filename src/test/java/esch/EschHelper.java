@@ -1,7 +1,5 @@
 package esch;
 
-import schwaemm.SchwaemmHelper;
-import schwaemm.SchwaemmType;
 import util.ConversionUtil;
 
 import java.util.Random;
@@ -10,7 +8,7 @@ public record EschHelper(byte[] in, byte[] out, int[] state) {
 
     static Random random = new Random();
 
-    public static EschHelper prepareTest(int type, int minLength, Random random) {
+    public static EschHelper prepareTest(int type, int minLength, int maxLength, Random random) {
         int ESCH_DIGEST_LEN;
         int SPARKLE_STATE;
         switch (type) {
@@ -28,7 +26,7 @@ public record EschHelper(byte[] in, byte[] out, int[] state) {
         int stateLength = (SPARKLE_STATE/32);;
         int outLength = (ESCH_DIGEST_LEN/8);
 
-        int randomMsg = random.nextInt(2056 - minLength) + minLength;
+        int randomMsg = random.nextInt(maxLength - minLength) + minLength;
         byte[] in = new byte[randomMsg];
         random.nextBytes(in);
 

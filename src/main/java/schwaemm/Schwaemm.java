@@ -120,14 +120,14 @@ public final class Schwaemm {
     int index = 0;
     int messageIndex = 0;
     while (cipherLength > RATE_BYTES) {
-      int[] messageInt = new int[state.length / 2];
+      int[] messageInt = new int[type.getCipherLength()];
       rhoWhiDec(state, cipherAsInt, index, messageInt, 0);
       sparkleSlim.accept(state);
-      ConversionUtil.populateByteArrayFromInts(messageInt, message, 0, TAG_BYTES, messageIndex);
+      ConversionUtil.populateByteArrayFromInts(messageInt, message, 0, messageInt.length * 8,
+          messageIndex);
       cipherLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
       messageIndex += RATE_BYTES;
-
     }
 
     state[STATE_WORDS - 1] ^= ((cipherLength < RATE_BYTES) ? CONST_M2 : CONST_M3);
@@ -218,10 +218,11 @@ public final class Schwaemm {
     int index = 0;
     int cipherIndex = 0;
     while (msgLength > RATE_BYTES) {
-      int[] cipher = new int[state.length / 2];
+      int[] cipher = new int[type.getCipherLength()];
       rhoWhiEnc(state, msgAsInt, index, cipher, 0);
       sparkleSlim.accept(state);
-      ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes, 0, TAG_BYTES, cipherIndex);
+      ConversionUtil.populateByteArrayFromInts(cipher, cipherBytes, 0, cipher.length * 8,
+          cipherIndex);
       msgLength -= RATE_BYTES;
       index += RATE_BYTES / 4;
       cipherIndex += RATE_BYTES;
